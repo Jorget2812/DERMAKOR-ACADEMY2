@@ -229,6 +229,7 @@ export async function createBankTransferOrder(items: CartItem[], orderInfo: Orde
     const supabase = await createClient()
 
     // 1. Get user and verify status
+    const { data: { user } } = await supabase.auth.getUser()
     if (!user) throw new Error("Non authentifié")
 
     // 2. Call the secure RPC to create the order
