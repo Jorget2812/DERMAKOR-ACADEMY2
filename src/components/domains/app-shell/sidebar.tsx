@@ -1,6 +1,7 @@
 'use client'
 
-import { Link, usePathname } from '@/navigation'
+import { Link } from '@/navigation'
+import { usePathname } from 'next/navigation'
 import { logout } from '@/domains/auth/auth-actions'
 import { useState, useEffect } from 'react'
 import { getCategories } from '@/domains/commerce/actions'
