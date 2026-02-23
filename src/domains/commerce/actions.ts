@@ -232,6 +232,16 @@ export async function createBankTransferOrder(items: CartItem[], orderInfo: Orde
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) throw new Error("Non authentifié")
 
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('verification_status, status')
+        .eq('id', user.id)
+        .single()
+
+    if (!profile || profile.verification_status !== 'APPROVED' || profile.status !== 'ACTIVE') {
+        throw new Error("Compte non vérifié ou inactif")
+    }
+
     // 2. Call the secure RPC to create the order
     // This handles stock decrement, pricing validation, VAT, and totals calculation
     const shippingAddress = { ...orderInfo.shippingAddress, country: 'CH' }
