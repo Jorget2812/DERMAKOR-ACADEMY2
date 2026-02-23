@@ -228,9 +228,9 @@ export async function createCheckoutSession(items: CartItem[], orderInfo: OrderI
 export async function createBankTransferOrder(items: CartItem[], orderInfo: OrderInput) {
     const supabase = await createClient()
 
-    // 1. Get user and verify status
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) throw new Error("Non authentifié")
+    // 1. Get user and verify status (Security Guard Layer 1: Middleware/TS)
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) throw new Error("Non authentifié")
 
     const { data: profile } = await supabase
         .from('profiles')
@@ -242,31 +242,26 @@ export async function createBankTransferOrder(items: CartItem[], orderInfo: Orde
         throw new Error("Compte non vérifié ou inactif")
     }
 
-    // 2. Call the secure RPC to create the order
-    // This handles stock decrement, pricing validation, VAT, and totals calculation
+    // 2. Call the secure RPC (Security Guard Layer 2: DB/RPC)
+    // The RPC 'create_order_secure' uses auth.uid() internally for authorization.
     const shippingAddress = { ...orderInfo.shippingAddress, country: 'CH' }
 
     const { data: orderId, error: rpcError } = await (supabase as any).rpc('create_order_secure', {
-        p_shipping_address: shippingAddress as any,
-        p_billing_address: shippingAddress as any, // Default billing to shipping
+        p_shipping_address: shippingAddress,
+        p_billing_address: shippingAddress,
         p_items: items.map(i => ({ variant_id: i.variantId, qty: i.qty }))
     })
 
     if (rpcError) {
-        // OPUS: Structured logging for critical failure
-        console.error("[createBankTransferOrder] RPC FATAL:", {
+        console.error("[createBankTransferOrder] RPC FAILURE:", {
             code: rpcError.code,
             message: rpcError.message,
-            details: rpcError.details,
-            hint: rpcError.hint,
             userId: user.id
         })
-
-        // Return the actual SQL error message to the UI for debugging
-        throw new Error(`[DB_ERROR] ${rpcError.message || "Erreur inconnue"}`)
+        throw new Error(rpcError.message || "Erreur lors de la création de la commande")
     }
 
-    // 3. Fetch the order reference (invoice_number) for the confirmation message
+    // 3. Fetch order reference
     const { data: order } = await supabase
         .from('orders')
         .select('invoice_number')
