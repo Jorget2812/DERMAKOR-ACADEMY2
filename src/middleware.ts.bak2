@@ -1,0 +1,31 @@
+import createMiddleware from 'next-intl/middleware';
+import { locales, localePrefix } from './navigation';
+import { type NextRequest } from 'next/server';
+import { updateSession } from './lib/supabase/middleware';
+
+// 1. Create the i18n middleware
+const intlMiddleware = createMiddleware({
+    locales,
+    defaultLocale: 'fr',
+    localePrefix
+});
+
+export default async function middleware(request: NextRequest) {
+    // 2. Run i18n middleware
+    // This handles locale detection and redirects (e.g., / -> /fr)
+    const response = intlMiddleware(request);
+
+    // 3. Run Supabase session management
+    // This updates cookies and handles auth-guarded redirects (/admin, /app)
+    // We pass the i18n response so it carries forward the locale headers/cookies
+    return await updateSession(request, response);
+}
+
+export const config = {
+    // Match all pathnames except for:
+    // - api (API routes)
+    // - _next (Next.js internals)
+    // - static files (with dots in filename)
+    // - images in public folder
+    matcher: ['/((?!api|_next|.*\\..*).*)']
+};

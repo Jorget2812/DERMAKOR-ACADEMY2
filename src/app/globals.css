@@ -1,0 +1,180 @@
+@import "tailwindcss";
+
+@plugin "tailwindcss-animate";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Manrope", ui-serif, Georgia, serif;
+
+  --color-background: #FDFCFB;
+  /* Ivory White */
+  --color-foreground: #1A1A1A;
+  /* Deep Onyx */
+
+  --color-card: #FFFFFF;
+  --color-card-foreground: #1A1A1A;
+
+  --color-popover: #FFFFFF;
+  --color-popover-foreground: #1A1A1A;
+
+  --color-primary: #1A1A1A;
+  --color-primary-foreground: #FDFCFB;
+
+  --color-secondary: #F5F2F0;
+  /* Soft Stone */
+  --color-secondary-foreground: #1A1A1A;
+
+  --color-muted: #F5F2F0;
+  --color-muted-foreground: #737373;
+
+  --color-accent: #c8a34c;
+  /* Stitch Golden Beige */
+  --color-accent-foreground: #FFFFFF;
+
+  --color-destructive: #991B1B;
+  --color-destructive-foreground: #FEF2F2;
+
+  --color-border: #E5E1DE;
+  --color-input: #E5E1DE;
+  --color-ring: #c8a34c;
+
+  --radius-lg: 0.75rem;
+  --radius-md: calc(0.75rem - 2px);
+  --radius-sm: calc(0.75rem - 4px);
+
+  @keyframes accordion-down {
+    from {
+      height: 0;
+    }
+
+    to {
+      height: var(--radix-accordion-content-height);
+    }
+  }
+
+  @keyframes accordion-up {
+    from {
+      height: var(--radix-accordion-content-height);
+    }
+
+    to {
+      height: 0;
+    }
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground transition-colors duration-500 antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  .font-serif {
+    @apply font-sans font-bold tracking-tight text-primary;
+  }
+}
+
+@layer components {
+  .glass {
+    @apply bg-white/70 backdrop-blur-md border border-white/20 shadow-sm;
+  }
+
+  .gold-gradient {
+    background: linear-gradient(135deg, #c8a34c 0%, #E6D4A8 50%, #c8a34c 100%);
+  }
+
+  .gold-glow {
+    box-shadow: 0 0 20px rgba(200, 163, 76, 0.15);
+  }
+}
+
+/* HTML Content Styling (Clinical Luxe) */
+.html-content {
+  @apply leading-relaxed text-primary/80;
+}
+
+.html-content h1,
+.html-content h2,
+.html-content h3 {
+  @apply font-serif text-primary mt-8 mb-4 tracking-tight;
+}
+
+.html-content h2 {
+  @apply text-2xl;
+}
+
+.html-content h3 {
+  @apply text-xl;
+}
+
+.html-content p {
+  @apply mb-4 last:mb-0;
+}
+
+.html-content ul {
+  @apply list-disc list-inside mb-6 space-y-2 marker:text-accent;
+}
+
+.html-content ol {
+  @apply list-decimal list-inside mb-6 space-y-2 marker:text-accent font-bold;
+}
+
+.html-content strong {
+  @apply font-bold text-primary;
+}
+
+.html-content em {
+  @apply italic text-accent;
+}
+
+.html-content a {
+  @apply text-accent underline decoration-accent/30 hover:decoration-accent transition-all font-bold;
+}
+
+/* Custom Scrollbar for High-Density Windows */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  @apply bg-primary/5 rounded-full hover:bg-primary/10 transition-colors;
+}
+
+/* Base Shadcn Variables (Light) */
+:root {
+  --background: 0 0% 99%;
+  --foreground: 0 0% 10%;
+  --card: 0 0% 100%;
+  --card-foreground: 0 0% 10%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 0 0% 10%;
+  --primary: 0 0% 10%;
+  --primary-foreground: 0 0% 98%;
+  --secondary: 24 5% 95%;
+  --secondary-foreground: 0 0% 10%;
+  --muted: 24 5% 95%;
+  --muted-foreground: 0 0% 45%;
+  --accent: 42 54% 54%;
+  /* #c8a34c in HSL */
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 24 5% 87%;
+  --input: 24 5% 87%;
+  --ring: 42 54% 54%;
+  --radius: 0.75rem;
+}

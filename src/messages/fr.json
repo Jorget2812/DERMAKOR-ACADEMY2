@@ -1,0 +1,47 @@
+{
+    "Common": {
+        "loading": "Chargement...",
+        "back": "Retour",
+        "save": "Enregistrer",
+        "cancel": "Annuler",
+        "nav": {
+            "register": "S'inscrire comme Professionnel"
+        },
+        "auth": {
+            "login": "Connexion",
+            "logout": "Déconnexion",
+            "account": "Mon Compte"
+        }
+    },
+    "Index": {
+        "hero": {
+            "badge": "Expertise Suisse en Dermo-Esthétique",
+            "title": "L'Élite de la Beauté pour les <accent>Professionnels</accent>",
+            "subtitle": "Formations certifiantes et boutique exclusive de produits dermo-esthétiques haute performance. Réservé aux experts.",
+            "cta_secondary": "Découvrir la Collection"
+        },
+        "features": {
+            "swiss": {
+                "title": "Qualité Suisse",
+                "desc": "Des standards de fabrication exigeants et des formulations scientifiquement prouvées."
+            },
+            "restricted": {
+                "title": "Accès Restreint",
+                "desc": "Une plateforme sécurisée exclusivement dédiée aux instituts et cliniques esthétiques."
+            },
+            "academy": {
+                "title": "Académie Masterclass",
+                "desc": "Apprentissage continu avec des experts internationaux et des protocoles innovants."
+            }
+        },
+        "footer": {
+            "desc": "Elite Dermo-Esthétique en Suisse. Formations professionnelles y boutique exclusive."
+        }
+    },
+    "Navigation": {
+        "products": "Produits Professionnels",
+        "about": "À Propos",
+        "academy": "Nos Formations",
+        "register": "Inscription Professionnelle"
+    }
+}

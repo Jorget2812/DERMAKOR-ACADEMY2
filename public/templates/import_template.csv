@@ -1,0 +1,4 @@
+sku,product_name,category,base_price_chf,stock,description,images,vendor
+DK-BIO-001,Biomimetic Serum,Sérums,85.00,50,"Sérum régénérant haute performance",https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=500,Dermakor
+DK-CLE-002,Nettoyant Doux,Nettoyants,42.50,120,"Gel nettoyant purifiant sans sulfates",https://images.unsplash.com/photo-1556228720-195a672e8a03?w=500,Dermakor
+DK-CRE-003,Crème Revit,Hydratants,110.00,35,"Crème anti-âge riche en peptides",https://images.unsplash.com/photo-1608248597279-f99d160bfcbc?w=500,Swiss Lab
