@@ -6,6 +6,7 @@ import { ShoppingBag, GraduationCap, Package, Clock, ShieldCheck, Zap } from 'lu
 import { Link } from '@/navigation'
 import { getUserStats } from '@/domains/commerce/actions'
 import { Badge } from '@/components/ui/badge'
+import { getDashboardSettings } from '@/domains/admin/cms-actions'
 
 
 export default async function DashboardPage() {
@@ -26,13 +27,7 @@ export default async function DashboardPage() {
     const isPremium = profile?.level === 'PREMIUM'
 
     // Load dynamic CMS content
-    const { data: cms } = await supabase
-        .from('dashboard_settings')
-        .select('*')
-        .eq('level', profile?.level || 'NONE')
-        .eq('locale', 'fr') // Should come from params but hardcoding fr for now or using fallback logic
-        .eq('enabled', true)
-        .maybeSingle()
+    const cms = await getDashboardSettings(profile?.level || 'NONE', 'fr')
 
     return (
         <div className="space-y-8">
@@ -62,10 +57,10 @@ export default async function DashboardPage() {
             </div>
 
             {/* Dynamic Hero Section */}
-            {cms ? (
-                <Card 
+            {cms?.enabled ? (
+                <Card
                     className="border-none shadow-xl overflow-hidden relative"
-                    style={{ 
+                    style={{
                         backgroundColor: cms.hero_bg_color || '#0F172A',
                         color: cms.hero_title_color || '#FFFFFF'
                     }}
