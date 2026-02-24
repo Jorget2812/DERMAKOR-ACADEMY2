@@ -1,80 +1,83 @@
-import { listProductsPublic } from '@/domains/commerce/actions'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+import { listCategoriesPublic } from '@/domains/commerce/actions'
 import { Link } from '@/navigation'
-import { Eye } from 'lucide-react'
+import { ArrowRight, Package2, Layers } from 'lucide-react'
 
 export default async function PublicShopPage() {
-    const products = await listProductsPublic()
+    const categories = await listCategoriesPublic()
 
     return (
-        <div className="container mx-auto px-4 py-12">
-            <header className="mb-12 text-center">
-                <h1 className="text-4xl md:text-5xl mb-4">Notre Boutique</h1>
-                <p className="text-muted-foreground max-w-2xl mx-auto">
-                    Découvrez notre gamme exclusive de produits de dermo-esthétique haute performance.
-                    Connectez-vous pour voir les prix et commander.
-                </p>
-            </header>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                {products.map((product) => (
-                    <Card key={product.id} className="overflow-hidden group hover:shadow-xl transition-all duration-300 border-border/50">
-                        <div className="aspect-square bg-secondary relative overflow-hidden">
-                            {/* Placeholder for product image */}
-                            <div className="absolute inset-0 flex items-center justify-center text-muted-foreground opacity-50">
-                                <Package size={48} strokeWidth={1} />
-                            </div>
-                            <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/5 transition-colors" />
-                        </div>
-                        <CardHeader className="p-6">
-                            <CardTitle className="text-lg group-hover:text-accent transition-colors">{product.name}</CardTitle>
-                            <CardDescription className="line-clamp-2 mt-2">{product.description}</CardDescription>
-                        </CardHeader>
-                        <CardFooter className="p-6 pt-0 flex flex-col gap-3">
-                            <div className="w-full flex justify-between items-center text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                                <span>Professionnel</span>
-                                <span className="text-accent underline">Prix masqué</span>
-                            </div>
-                            <Link href={`/shop/${product.slug}`} className="w-full">
-                                <Button className="w-full group-hover:bg-accent transition-colors" variant="secondary">
-                                    <Eye className="w-4 h-4 mr-2" /> Voir le produit
-                                </Button>
-                            </Link>
-                        </CardFooter>
-                    </Card>
-                ))}
-            </div>
-
-            {products.length === 0 && (
-                <div className="text-center py-24">
-                    <p className="text-muted-foreground">Aucun produit disponible pour le moment.</p>
+        <div className="min-h-screen bg-[#FDFCFB]">
+            {/* Hero Header */}
+            <section className="border-b bg-white py-16">
+                <div className="container mx-auto px-6 text-center space-y-6">
+                    <span className="inline-block px-6 py-2 rounded-full border border-accent/20 bg-accent/5 text-accent text-[10px] uppercase tracking-[0.3em] font-bold">
+                        Collections Exclusives
+                    </span>
+                    <h1 className="text-4xl md:text-6xl font-serif text-primary">Notre Boutique</h1>
+                    <p className="text-muted-foreground max-w-2xl mx-auto font-light leading-relaxed text-lg">
+                        Sélectionnez une catégorie pour découvrir notre gamme exclusive de produits dermo-esthétiques haute performance.
+                    </p>
                 </div>
-            )}
-        </div>
-    )
-}
+            </section>
 
-function Package(props: any) {
-    return (
-        <svg
-            {...props}
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        >
-            <path d="M7.5 4.27 12 7l4.5-2.73L12 1.5z" />
-            <path d="M18 10V5c0-1.1-.9-2-2-2h-1" />
-            <path d="M6 10V5c0-1.1.9-2 2-2h1" />
-            <rect width="20" height="13" x="2" y="10" rx="2" />
-            <path d="M12 22V13" />
-            <path d="M17 13l-5 5-5-5" />
-        </svg>
+            {/* Categories Grid */}
+            <section className="container mx-auto px-6 py-20">
+                {categories.length === 0 ? (
+                    <div className="text-center py-32 space-y-4">
+                        <Layers size={48} className="mx-auto text-muted-foreground/30" />
+                        <p className="text-muted-foreground font-light uppercase tracking-widest text-sm">
+                            Aucune catégorie disponible.
+                        </p>
+                    </div>
+                ) : (
+                    <>
+                        <div className="flex items-center justify-between mb-10">
+                            <h2 className="text-2xl font-serif italic text-primary">
+                                {categories.length} catégorie{categories.length > 1 ? 's' : ''} disponible{categories.length > 1 ? 's' : ''}
+                            </h2>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                            {categories.map((cat, i) => (
+                                <Link
+                                    key={cat.id}
+                                    href={`/shop/category/${cat.slug}`}
+                                    className="group block"
+                                >
+                                    <div className="relative h-64 rounded-2xl overflow-hidden bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-100 group-hover:border-accent/30 group-hover:shadow-2xl group-hover:shadow-accent/10 transition-all duration-500">
+                                        {/* Background pattern */}
+                                        <div className="absolute inset-0 opacity-30 group-hover:opacity-60 transition-opacity" style={{
+                                            backgroundImage: `radial-gradient(circle at ${(i % 3) * 33 + 15}% ${(i % 2) * 50 + 25}%, #C5A05920 0%, transparent 60%)`
+                                        }} />
+
+                                        {/* Content */}
+                                        <div className="absolute inset-0 flex flex-col justify-between p-8">
+                                            <div className="w-12 h-12 rounded-xl bg-white shadow-md flex items-center justify-center text-accent group-hover:scale-110 transition-transform duration-300">
+                                                <Package2 size={22} />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                                                    {cat.product_count} produit{cat.product_count > 1 ? 's' : ''}
+                                                </div>
+                                                <h3 className="text-xl font-serif text-primary group-hover:text-accent transition-colors duration-300">
+                                                    {cat.name}
+                                                </h3>
+                                                <div className="flex items-center gap-2 text-accent text-xs font-bold uppercase tracking-widest opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300">
+                                                    Voir les produits <ArrowRight size={12} />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Arrow badge */}
+                                        <div className="absolute top-4 right-4 w-10 h-10 bg-white rounded-full shadow-sm flex items-center justify-center text-muted-foreground/40 group-hover:text-accent group-hover:shadow-accent/20 transition-all duration-300">
+                                            <ArrowRight size={18} className="group-hover:translate-x-0.5 transition-transform" />
+                                        </div>
+                                    </div>
+                                </Link>
+                            ))}
+                        </div>
+                    </>
+                )}
+            </section>
+        </div>
     )
 }

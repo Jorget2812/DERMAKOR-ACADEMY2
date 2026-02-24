@@ -1,4 +1,4 @@
-import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
+﻿import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
 import { createAdminClient } from './supabase/admin'
 
 export async function generateAndUploadInvoice(orderId: string) {
@@ -60,7 +60,7 @@ export async function generateAndUploadInvoice(orderId: string) {
         swift: iSettings?.swift_bic
     }
 
-    const termsText = iSettings?.terms_text || "Merci pour votre confianza. Paiement à 10 jours."
+    const termsText = iSettings?.terms_text || "Merci pour votre confiance. Paiement sous 10 jours."
     const invoiceNotes = iSettings?.invoice_notes || ""
 
     // Profile info
@@ -97,8 +97,8 @@ export async function generateAndUploadInvoice(orderId: string) {
     page.drawText(profile?.full_name || '', { x: 350, y: height - 125, size: 9, font })
     page.drawText(profile?.company_name || '', { x: 350, y: height - 135, size: 9, font })
     const shipping = order.shipping_address as any
-    page.drawText(`${shipping?.line1 || ''}`, { x: 350, y: height - 145, size: 9, font })
-    page.drawText(`${shipping?.postal_code || ''} ${shipping?.city || ''}, ${shipping?.country || ''}`, { x: 350, y: height - 155, size: 9, font })
+    page.drawText(`${shipping?.street || ''}`, { x: 350, y: height - 145, size: 9, font })
+    page.drawText(`${shipping?.postalCode || ''} ${shipping?.city || ''}, ${shipping?.country || ''}`, { x: 350, y: height - 155, size: 9, font })
 
     // Table Header
     let currentY = height - 200
@@ -168,7 +168,7 @@ export async function generateAndUploadInvoice(orderId: string) {
             page.drawText(invoiceNotes.substring(0, 500), { x: 50, y: currentY, size: 7, font: italicFont, color: gray })
             currentY -= 20
         }
-        page.drawText(termsText, { x: 50, y: currentY, size: 8, font, color: dark })
+        page.drawText(termsText.replace("{invoice_number}", invoiceNum), { x: 50, y: currentY, size: 8, font, color: dark })
     }
 
     // Standard Footer

@@ -81,8 +81,6 @@ export function CheckoutFlow({ items, subtotal, vatAmount, totalCHF, onComplete,
         try {
             const result = await createBankTransferOrder(items, { shippingAddress: shipping })
             if (result.success) {
-                // IMPORTANT: Clear cart immediately to prevent stale state
-                useCart.getState().clearCart()
                 setOrderRef(result.reference)
                 setStep('INSTRUCTIONS')
             }

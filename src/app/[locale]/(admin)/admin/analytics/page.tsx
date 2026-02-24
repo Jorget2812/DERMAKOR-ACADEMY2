@@ -3,6 +3,8 @@ import { AnalyticsDashboard } from '@/domains/admin/components/AnalyticsDashboar
 import { Button } from "@/components/ui/button"
 import { Download } from 'lucide-react'
 
+export const dynamic = 'force-dynamic'
+
 export default async function AdminAnalyticsPage() {
     const stats = await getAnalyticsStats()
 

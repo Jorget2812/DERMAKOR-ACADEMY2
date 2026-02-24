@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useMemo } from 'react'
 import DOMPurify from 'isomorphic-dompurify'
@@ -193,7 +193,7 @@ export function ProductDetailClient({ product, initialPricing, isAdmin, badgeTex
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-4 py-4 px-6 bg-secondary/30 rounded-2xl w-fit">
+                            {isAdmin && (<div className="flex items-center gap-4 py-4 px-6 bg-secondary/30 rounded-2xl w-fit">
                                 <div className={cn(
                                     "w-2.5 h-2.5 rounded-full animate-pulse",
                                     initialPricing.stock_count > 10 ? "bg-emerald-500" : initialPricing.stock_count > 0 ? "bg-amber-500" : "bg-primary/20"
@@ -206,7 +206,7 @@ export function ProductDetailClient({ product, initialPricing, isAdmin, badgeTex
                                             : 'Rupture de Stock'
                                     }
                                 </span>
-                            </div>
+                            </div>)}
                         </div>
                     ) : (
                         <Link

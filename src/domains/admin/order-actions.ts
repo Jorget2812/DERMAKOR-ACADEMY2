@@ -1,4 +1,4 @@
-'use server'
+﻿'use server'
 
 import { createClient } from '@/lib/supabase/server'
 import { ensureAdmin } from '@/lib/auth/admin-guard'
@@ -64,60 +64,27 @@ export async function markOrderPaid(orderId: string) {
     await ensureAdmin()
     const supabase = await createClient()
 
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) throw new Error("Non authentifié")
+    // Delegamos toda la logica al RPC de PostgreSQL:
+    // - Idempotente (no doble pago)
+    // - Genera invoice_number si falta
+    // - Decrementa stock con lock (evita stock negativo)
+    // - Audit log incluido
+    const { error } = await (supabase as any).rpc('mark_order_paid', {
+        p_order_id: orderId
+    })
 
-    // 1. Get current status and items
-    const { data: order, error: orderError } = await supabase
-        .from('orders')
-        .select(`
-            status,
-            order_items (variant_id, qty)
-        `)
-        .eq('id', orderId)
-        .single()
-
-    if (orderError || !order) throw new Error("Commande introuvable")
-
-    // 2. Guards
-    if (order.status === 'PAID') return { success: true, message: "Déjà payée" }
-    if (order.status === 'CANCELLED') throw new Error("Impossible de payer une commande annulée")
-
-    // 3. Decrement Stock (Idempotent)
-    // We only reach this if status was PENDING
-    for (const item of (order.order_items as any[])) {
-        if (item.variant_id && item.qty) {
-            const { data: ok, error: rpcError } = await supabase.rpc('decrement_stock_safe', {
-                p_variant_id: item.variant_id,
-                p_qty: item.qty
-            })
-            if (rpcError || !ok) throw new Error(`Stock insuffisant pour une variante (${item.variant_id})`)
-        }
+    if (error) {
+        console.error('[markOrderPaid] RPC error:', error)
+        if (error.message.includes('Forbidden')) throw new Error("Acces refuse")
+        if (error.message.includes('cancelled')) throw new Error("Impossible de payer une commande annulee")
+        if (error.message.includes('Insufficient stock')) throw new Error("Stock insuffisant")
+        throw new Error(error.message)
     }
-
-    // 4. Update order status
-    const { error: updateError } = await supabase
-        .from('orders')
-        .update({
-            status: 'PAID',
-            paid_at: new Date().toISOString()
-        } as any)
-        .eq('id', orderId)
-
-    if (updateError) throw new Error(updateError.message)
-
-    // Audit Log
-    await auditLog('ORDER_MARK_PAID', 'orders', orderId, { status: 'PAID' })
 
     revalidatePath('/admin/orders')
     revalidatePath(`/admin/orders/${orderId}`)
     return { success: true }
 }
-
-/**
- * Cancel an order.
- * Rule: NO stock restoration because it's no longer deducted on creation.
- */
 export async function cancelOrder(orderId: string, reason?: string) {
     await ensureAdmin()
     const supabase = await createClient()

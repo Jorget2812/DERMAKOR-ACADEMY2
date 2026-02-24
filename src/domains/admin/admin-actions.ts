@@ -52,14 +52,15 @@ export async function getAdminDashboardStats() {
     // 1. Monthly Sales (Current month)
     const now = new Date()
     const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString()
 
-    const { data: orders } = await supabase
+    const { data: monthlyOrders } = await supabase
         .from('orders')
         .select('total_final_cents')
         .gte('created_at', firstDay)
         .eq('status', 'PAID')
 
-    const monthlySalesCents = (orders || []).reduce((acc, o) => acc + (o.total_final_cents || 0), 0)
+    const monthlySalesCents = (monthlyOrders || []).reduce((acc, o) => acc + (o.total_final_cents || 0), 0)
     const monthlySales = (monthlySalesCents / 100).toFixed(2)
 
     // 2. Active Pros
@@ -75,10 +76,38 @@ export async function getAdminDashboardStats() {
         .select('*', { count: 'exact', head: true })
         .eq('status', 'PENDING')
 
+    // 4. Low Stock Alerts (threshold < 10)
+    const { data: lowStockItems } = await supabase
+        .from('product_variants')
+        .select(`
+            stock_count,
+            products ( name )
+        `)
+        .lt('stock_count', 10)
+        .eq('active', true)
+        .order('stock_count', { ascending: true })
+        .limit(5)
+
+    // 5. Daily Orders
+    const { data: dailyOrders } = await supabase
+        .from('orders')
+        .select('total_final_cents')
+        .gte('created_at', todayStart)
+
+    const dailyStats = {
+        count: dailyOrders?.length || 0,
+        total: ((dailyOrders || []).reduce((acc, o) => acc + (o.total_final_cents || 0), 0) / 100).toFixed(2)
+    }
+
     return {
         monthlySales: monthlySales,
         activePros: activePros || 0,
-        pendingVerifications: pendingVerifications || 0
+        pendingVerifications: pendingVerifications || 0,
+        lowStockItems: (lowStockItems || []).map(i => ({
+            name: (i.products as any)?.name || 'Produit',
+            stock: i.stock_count
+        })),
+        dailyStats
     }
 }
 
@@ -87,20 +116,28 @@ export async function getAdminDashboardStats() {
  */
 export async function getAnalyticsStats() {
     await ensureAdmin()
-    const supabase = await createClient()
+    // Use ADMIN client to bypass RLS and see all orders for the report
+    const supabase = createAdminClient()
 
-    // 1. Monthly Growth (Last 6 months)
-    // In a real scenario, this would be a group-by query. 
-    // For now, we provide the structure expected by AnalyticsDashboard.tsx
-    const months = ['SEP', 'OCT', 'NOV', 'DEC', 'JAN', 'FEB']
-    const monthlyGrowth = months.map(m => ({
-        month: m,
-        sales: Math.floor(Math.random() * 5000) + 2000, // Simulated for demo
-        users: Math.floor(Math.random() * 15) + 5
-    }))
+    const now = new Date()
+    const months = []
 
-    // 2. Top Products (Aggregate from order_items)
-    const { data: items } = await supabase
+    // 1. Calculate the range (Last 6 months)
+    const startDate = new Date(now.getFullYear(), now.getMonth() - 5, 1)
+    startDate.setHours(0, 0, 0, 0)
+
+    // Fetch all relevant data once
+    const { data: allOrders } = await supabase
+        .from('orders')
+        .select('total_final_cents, created_at, status')
+        .gte('created_at', startDate.toISOString())
+
+    const { data: allProfiles } = await supabase
+        .from('profiles')
+        .select('created_at, verification_status')
+        .gte('created_at', startDate.toISOString())
+
+    const { data: allItems } = await supabase
         .from('order_items')
         .select(`
             qty,
@@ -109,18 +146,79 @@ export async function getAnalyticsStats() {
                 products (name)
             )
         `)
-        .order('line_total_cents', { ascending: false })
-        .limit(5)
 
-    const topProducts = (items || []).map(item => ({
-        name: (item.product_variants as any)?.products?.name || 'Produit',
-        quantity: item.qty,
-        total_price_cents: item.line_total_cents
-    }))
+    // 2. Group data by month in JS
+    for (let i = 5; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+        const monthIndex = d.getMonth()
+        const year = d.getFullYear()
+
+        const monthOrders = (allOrders || []).filter(o => {
+            if (!o.created_at) return false
+            const od = new Date(o.created_at)
+            return od.getMonth() === monthIndex && od.getFullYear() === year && o.status === 'PAID'
+        })
+
+        const salesCents = monthOrders.reduce((sum, o) => sum + (o.total_final_cents || 0), 0)
+
+        const monthUsersCount = (allProfiles || []).filter(p => {
+            if (!p.created_at) return false
+            const ud = new Date(p.created_at)
+            return ud.getMonth() === monthIndex && ud.getFullYear() === year && p.verification_status === 'APPROVED'
+        }).length
+
+        const label = d.toLocaleString('fr-CH', { month: 'short' }).toUpperCase()
+        const yearSuffix = year.toString().slice(-2)
+
+        months.push({
+            month: `${label} ${yearSuffix}`,
+            sales: salesCents / 100,
+            users: monthUsersCount
+        })
+    }
+
+    // 3. KPIs
+    const currentMonthStats = months[months.length - 1]
+    const prevMonthStats = months[months.length - 2]
+
+    let salesGrowth = 0
+    if (prevMonthStats && prevMonthStats.sales > 0) {
+        salesGrowth = ((currentMonthStats.sales - prevMonthStats.sales) / prevMonthStats.sales) * 100
+    }
+
+    const currentMonthOrders = (allOrders || []).filter(o => {
+        if (!o.created_at) return false
+        const od = new Date(o.created_at)
+        return od.getMonth() === now.getMonth() && od.getFullYear() === now.getFullYear()
+    })
+
+    const avgBasketCents = currentMonthOrders.length
+        ? currentMonthOrders.reduce((sum, o) => sum + (o.total_final_cents || 0), 0) / currentMonthOrders.length
+        : 0
+
+    // 4. Top Products (Aggregated)
+    const aggregation: Record<string, { quantity: number, total_price_cents: number }> = {}
+
+    allItems?.forEach(item => {
+        const name = (item.product_variants as any)?.products?.name || 'Produit'
+        if (!aggregation[name]) {
+            aggregation[name] = { quantity: 0, total_price_cents: 0 }
+        }
+        aggregation[name].quantity += item.qty
+        aggregation[name].total_price_cents += item.line_total_cents
+    })
+
+    const topProducts = Object.entries(aggregation)
+        .map(([name, data]) => ({ name, ...data }))
+        .sort((a, b) => b.total_price_cents - a.total_price_cents)
+        .slice(0, 5)
 
     return {
         topProducts,
-        monthlyGrowth
+        monthlyGrowth: months,
+        salesGrowth: salesGrowth.toFixed(1),
+        newPros: currentMonthStats.users,
+        averageBasket: (avgBasketCents / 100).toFixed(2)
     }
 }
 

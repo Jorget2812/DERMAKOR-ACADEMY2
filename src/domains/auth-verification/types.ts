@@ -1,15 +1,18 @@
-import { z } from 'zod'
+﻿import { z } from 'zod'
 
 export const VerificationRequestSchema = z.object({
     fullName: z.string().min(3, "Nom complet requis"),
     email: z.string().email("Email invalide"),
     phonePersonal: z.string().optional(),
     companyName: z.string().min(2, "Raison sociale requise"),
-    ideSituation: z.string().min(1, "Situation IDE requise"),
-    phonePro: z.string().min(5, "Téléphone professionnel requis"),
-    expertiseDomain: z.string().min(1, "Domaine d'expertise requis"),
+    ideSituation: z.string().optional(),
+    phonePro: z.string().min(5, "Telephone professionnel requis"),
+    expertiseDomain: z.string().optional(),
     website: z.string().url().optional().or(z.literal('')),
-    addressPro: z.string().min(5, "Adresse de l'établissement requise"),
+    addressPro: z.string().optional(),
+    canton: z.string().min(1, "Canton / Region requis"),
+    professionalType: z.string().min(1, "Type de professionnel requis"),
+    requestObject: z.string().min(1, "Objet de la demande requis"),
     message: z.string().optional(),
 })
 
@@ -21,7 +24,7 @@ export const LoginSchema = z.object({
 })
 
 export const InviteSchema = z.object({
-    password: z.string().min(8, "Le mot de passe doit faire au moins 8 caractères"),
+    password: z.string().min(8, "Le mot de passe doit faire au moins 8 caracteres"),
     confirmPassword: z.string()
 }).refine((data) => data.password === data.confirmPassword, {
     message: "Les mots de passe ne correspondent pas",

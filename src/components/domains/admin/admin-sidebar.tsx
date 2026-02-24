@@ -16,7 +16,8 @@ import {
     LogOut,
     ChevronRight,
     ShieldAlert,
-    FolderOpen
+    FolderOpen,
+    FileText
 } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 
@@ -38,6 +39,18 @@ const adminNavItems = [
     { name: 'Vérifications', href: '/admin/verifications', icon: ShieldAlert },
     { name: 'Professionnels', href: '/admin/users', icon: Users },
     { name: 'Analyses', href: '/admin/analytics', icon: BarChart3 },
+    {
+        name: 'Pages & Contenus',
+        href: '/admin/pages',
+        icon: FileText,
+        subItems: [
+            { name: 'Toutes les pages', href: '/admin/pages' },
+            { name: 'Page d\'Accueil', href: '/admin/pages/home' },
+            { name: 'À Propos', href: '/admin/pages/about' },
+            { name: 'Nos Formations', href: '/admin/pages/academy-info' },
+            { name: 'La Boutique', href: '/admin/pages/shop' },
+        ]
+    },
     {
         name: 'Paramètres',
         href: '/admin/settings',

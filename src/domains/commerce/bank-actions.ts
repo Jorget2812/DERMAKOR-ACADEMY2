@@ -1,4 +1,4 @@
-'use server'
+﻿'use server'
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
@@ -46,7 +46,7 @@ export async function updatePaymentSettings(settings: Partial<PaymentSettings>) 
     if (!user) throw new Error("Non authentifié")
 
     // Double check admin status
-    const { data: isAdmin } = await supabase.rpc('is_admin', { p_uid: user.id })
+    const { data: isAdmin } = await supabase.rpc('is_admin')
     if (!isAdmin) throw new Error("Accès refusé")
 
     const { data: current } = await (supabase.from('payment_settings' as any) as any).select('id').maybeSingle()

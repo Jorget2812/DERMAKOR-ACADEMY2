@@ -1,5 +1,3 @@
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
@@ -43,84 +41,95 @@ export async function POST(req: Request) {
 
     if (event.type === 'checkout.session.completed') {
         const session = event.data.object as Stripe.Checkout.Session
+        console.log(`[Stripe Webhook] Processing event: ${event.id}`)
 
-        // Extract data
-        const userId = session.metadata?.userId
-        const shippingAddress = JSON.parse(session.metadata?.shippingAddress || '{}')
-
-        if (!userId) {
-            console.error("No userId in session metadata")
-            return NextResponse.json({ error: "No userId" }, { status: 400 })
+        // PASO 1: Extraer orderId del metadata
+        const orderId = session.metadata?.orderId
+        if (!orderId) {
+            console.error('[Stripe Webhook] No orderId in metadata')
+            return NextResponse.json({ error: 'No orderId' }, { status: 400 })
         }
 
-        // Fetch Line Items to get variant details
-        const lineItems = await stripe.checkout.sessions.listLineItems(session.id, {
-            expand: ['data.price.product'],
-        })
-
         try {
-            // Transaction-like flow (manual since we're in JS, but RPC could do it all too)
-            // 1. Create Order
-            const { data: order, error: orderError } = await supabaseAdmin
+            // PASO 2: Buscar orden existente
+            const { data: existingOrder, error: fetchError } = await supabaseAdmin
                 .from('orders')
-                .insert({
-                    user_id: userId,
-                    status: 'PAID',
-                    currency: 'CHF',
-                    total_base_cents: session.amount_subtotal || 0,
-                    total_discount_cents: session.total_details?.amount_discount || 0,
-                    vat_total_cents: session.total_details?.amount_tax || 0,
-                    total_final_cents: session.amount_total || 0,
-                    shipping_cost_cents: session.shipping_cost?.amount_total || 0,
-                    shipping_address: shippingAddress,
-                    stripe_session_id: session.id
-                })
-                .select()
+                .select('id, status, user_id')
+                .eq('id', orderId)
                 .single()
 
-            if (orderError) throw orderError
+            if (fetchError || !existingOrder) {
+                console.error(`[Stripe Webhook] Order not found: ${orderId}`, fetchError)
+                return NextResponse.json({ error: 'Order not found' }, { status: 400 })
+            }
 
-            // 2. Create Order Items and Decrement Stock
-            for (const item of lineItems.data) {
-                const variantId = (item.price?.product as Stripe.Product)?.metadata?.variantId
+            // PASO 3: Idempotencia de orden
+            if (existingOrder.status === 'PAID') {
+                console.log(`[Stripe Webhook] Order already paid: ${orderId}`)
+                return NextResponse.json({ received: true, already_paid: true })
+            }
 
-                if (!variantId) continue
+            if (existingOrder.status !== 'PENDING') {
+                console.error(`[Stripe Webhook] Unexpected order status: ${existingOrder.status} for order ${orderId}`)
+                return NextResponse.json({ error: 'Invalid order status' }, { status: 400 })
+            }
 
-                // Add order item
-                const { error: itemError } = await supabaseAdmin
-                    .from('order_items')
-                    .insert({
-                        order_id: order.id,
-                        variant_id: variantId,
-                        qty: item.quantity || 1,
-                        base_unit_price_cents: item.price?.unit_amount || 0,
-                        discount_percent: 0, // Simplified for now
-                        net_unit_price_cents: item.price?.unit_amount || 0,
-                        vat_rate: 0, // Simplified
-                        vat_amount_cents: 0,
-                        gross_unit_price_cents: item.price?.unit_amount || 0,
-                        line_total_cents: item.amount_total
-                    })
+            // PASO 4: Marcar como pagada via RPC
+            const { error: paidError } = await supabaseAdmin.rpc('mark_order_paid', {
+                p_order_id: orderId
+            })
 
-                if (itemError) console.error("Item insert error:", itemError)
+            if (paidError) {
+                console.error(`[Stripe Webhook] mark_order_paid failed for ${orderId}:`, paidError)
+                throw new Error('mark_order_paid failed')
+            }
 
-                // Decrement stock safe
+            // PASO 5: Decrementar stock por cada item
+            const { data: orderItems, error: itemsError } = await supabaseAdmin
+                .from('order_items')
+                .select('variant_id, qty')
+                .eq('order_id', orderId)
+
+            if (itemsError) {
+                console.error(`[Stripe Webhook] Error fetching items for order ${orderId}:`, itemsError)
+                throw itemsError
+            }
+
+            for (const item of orderItems ?? []) {
                 const { data: stockOk, error: stockError } = await supabaseAdmin.rpc('decrement_stock_safe', {
-                    p_variant_id: variantId,
-                    p_qty: item.quantity || 1
+                    p_variant_id: item.variant_id,
+                    p_qty: item.qty
                 })
 
-                if (stockError || !stockOk) {
-                    console.error(`Stock update failed for variant ${variantId}:`, stockError)
-                    // In a real system, you might trigger a notification for low stock/oversell
+                if (!stockOk || stockError) {
+                    // Stock insuficiente: loguear en audit pero NO revertir
+                    // El pago ya ocurrió, el admin debe gestionar manualmente
+                    await supabaseAdmin.from('audit_logs').insert({
+                        action: 'STOCK_ALERT',
+                        resource_type: 'product_variant',
+                        resource_id: item.variant_id,
+                        payload: {
+                            order_id: orderId,
+                            qty_requested: item.qty,
+                            message: 'Stock insuficiente post-pago Stripe',
+                            error: stockError?.message || 'Manual intervention needed'
+                        }
+                    })
+                    console.error(`[Stripe Webhook] STOCK ALERT variant: ${item.variant_id} for order ${orderId}`)
+                } else {
+                    console.log(`[Stripe Webhook] Stock decremented for variant: ${item.variant_id}`)
                 }
             }
 
-            // 3. Mark event as processed
-            await supabaseAdmin.from('stripe_events').insert({ event_id: event.id })
+            // PASO 6: Marcar evento procesado
+            await supabaseAdmin.from('stripe_events').insert({
+                event_id: event.id
+            })
+
+            console.log(`[Stripe Webhook] Order completed successfully: ${orderId}`)
 
         } catch (dbError: any) {
-            console.error("Database processing error:", dbError)
+            console.error("[Stripe Webhook] Database processing error:", dbError)
             return NextResponse.json({ error: "Internal processing error" }, { status: 500 })
         }
     }

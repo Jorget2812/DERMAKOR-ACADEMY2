@@ -10,11 +10,15 @@ export default function LandingPage() {
     return (
         <div className="flex flex-col w-full">
             {/* Hero Section */}
-            <section className="relative h-[90vh] flex items-center justify-center overflow-hidden bg-[#FDFCFB]">
+            <section className="relative h-[90vh] flex items-center justify-center overflow-hidden">
                 <div className="absolute inset-0 z-0">
-                    <div className="absolute inset-0 bg-gradient-to-tr from-accent/5 via-transparent to-accent/10 z-10" />
-                    <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-accent/5 rounded-full blur-[120px] animate-pulse" />
-                    <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-accent/5 rounded-full blur-[120px] animate-pulse" />
+                    <img
+                        src="/images/hero-bg.png"
+                        alt="Expertise Dermo-Esthétique"
+                        className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-white/80 backdrop-blur-[2px] z-10" />
+                    <div className="absolute inset-0 bg-gradient-to-tr from-accent/5 via-transparent to-accent/10 z-20" />
                 </div>
 
                 <div className="container relative z-20 px-6 text-center space-y-12 animate-in fade-in slide-in-from-bottom-12 duration-1000">

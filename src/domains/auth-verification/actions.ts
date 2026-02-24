@@ -1,4 +1,4 @@
-'use server'
+﻿'use server'
 
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -25,11 +25,11 @@ export async function submitVerification(data: VerificationRequestForm) {
             email: validated.data.email,
             phone_personal: validated.data.phonePersonal,
             company_name: validated.data.companyName,
-            ide_situation: validated.data.ideSituation,
+            ide_situation: validated.data.ideSituation ?? '',
             phone_pro: validated.data.phonePro,
-            expertise_domain: validated.data.expertiseDomain,
+            expertise_domain: validated.data.expertiseDomain ?? '',
             website: validated.data.website,
-            address_pro: validated.data.addressPro,
+            address_pro: validated.data.addressPro ?? '',
             message: validated.data.message,
             status: 'PENDING'
         }])
@@ -37,6 +37,27 @@ export async function submitVerification(data: VerificationRequestForm) {
     if (error) {
         if (error.code === '23505') return { error: "Une demande avec cet email existe déjà" }
         return { error: "Erreur lors de l'envoi de la demande" }
+    }
+
+    // 2. Notify n8n (Background task to avoid blocking the user)
+    const n8nWebhookUrl = "https://jorge2812.app.n8n.cloud/webhook/1c994d86-492b-407a-bca3-018303d13921"
+
+    // We don't await this to keep the UI fast, or we wrap it in a silent try/catch
+    try {
+        fetch(n8nWebhookUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                event: 'registration_submitted',
+                fullName: validated.data.fullName,
+                email: validated.data.email,
+                companyName: validated.data.companyName,
+                addressPro: validated.data.addressPro,
+                submittedAt: new Date().toISOString()
+            })
+        }).catch(err => console.error("[n8n Webhook Error]:", err))
+    } catch (e) {
+        console.error("[n8n Trigger Error]:", e)
     }
 
     return { success: true }

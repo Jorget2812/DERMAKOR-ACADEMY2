@@ -1,4 +1,4 @@
-'use server'
+﻿'use server'
 
 import { createClient } from '@/lib/supabase/server'
 import { PublicProduct, VerifiedProduct, CartItem, OrderInput } from './types'
@@ -12,12 +12,83 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
  */
 export async function listProductsPublic(): Promise<PublicProduct[]> {
     const supabase = await createClient()
-    const { data, error } = await supabase.rpc('list_products_public')
+    const { data, error } = await supabase
+        .from('products')
+        .select('id, name, slug, description, images, category_id')
+        .eq('active', true)
+        .order('name')
+
     if (error) {
-        console.error("RPC Error:", error)
+        console.error("Fetch Error:", error)
         return []
     }
-    return data || []
+
+    return (data || []).map(p => ({
+        ...p,
+        images: Array.isArray(p.images) ? p.images : []
+    })) as PublicProduct[]
+}
+
+/**
+ * Public: List all active categories with product count
+ */
+export async function listCategoriesPublic(): Promise<{ id: string; name: string; slug: string; description: string | null; product_count: number }[]> {
+    const supabase = await createClient()
+    const { data, error } = await (supabase as any)
+        .from('categories')
+        .select('id, name, slug')
+        .order('name')
+
+    if (error) {
+        console.error('[listCategoriesPublic] Error:', error)
+        return []
+    }
+
+    // Get product counts per category
+    const categories = (data as any[]) || []
+    const withCounts = await Promise.all(categories.map(async (cat: any) => {
+        const { count } = await supabase
+            .from('products')
+            .select('*', { count: 'exact', head: true })
+            .eq('category_id', cat.id)
+            .eq('active', true)
+        return { ...cat, description: cat.description ?? null, product_count: count || 0 }
+    }))
+
+    return withCounts.filter(c => c.product_count > 0)
+}
+
+/**
+ * Public: List products filtered by category slug
+ */
+export async function listProductsByCategorySlug(slug: string): Promise<PublicProduct[]> {
+    const supabase = await createClient()
+
+    // First get the category id
+    const { data: category } = await supabase
+        .from('categories')
+        .select('id, name')
+        .eq('slug', slug)
+        .single()
+
+    if (!category) return []
+
+    const { data, error } = await supabase
+        .from('products')
+        .select('id, name, slug, description, images, category_id')
+        .eq('active', true)
+        .eq('category_id', category.id)
+        .order('name')
+
+    if (error) {
+        console.error('[listProductsByCategorySlug] Error:', error)
+        return []
+    }
+
+    return (data || []).map(p => ({
+        ...p,
+        images: Array.isArray(p.images) ? p.images : []
+    })) as PublicProduct[]
 }
 
 /**
@@ -177,13 +248,28 @@ export async function createCheckoutSession(items: CartItem[], orderInfo: OrderI
         .single()
 
     if (!profile || profile.verification_status !== 'APPROVED' || profile.status !== 'ACTIVE') {
-        throw new Error("Compte non vérifié o inactif")
+        throw new Error("Compte non vérifié ou inactif")
     }
 
     // 2. Resolve pricing and stock for these items
     const { data: pricingData, error: pricingError } = await supabase.rpc('get_products_with_pricing')
     if (pricingError || !pricingData) throw new Error("Erreur de calcul des prix")
 
+    // 3. PASO 3: Llamar create_order_secure ANTES de crear sesión Stripe
+    const shippingAddress = { ...orderInfo.shippingAddress, country: 'CH' }
+    const { data: orderId, error: orderError } = await (supabase as any).rpc('create_order_secure', {
+        p_shipping_address: shippingAddress,
+        p_billing_address: (orderInfo as any).billingAddress ?? shippingAddress,
+        p_items: items.map(i => ({
+            variant_id: i.variantId,
+            qty: i.qty
+        }))
+    })
+
+    if (orderError || !orderId) {
+        console.error("[createCheckoutSession] Order creation error:", orderError)
+        throw new Error("Erreur création commande")
+    }
 
     const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = []
 
@@ -206,19 +292,35 @@ export async function createCheckoutSession(items: CartItem[], orderInfo: OrderI
         })
     }
 
-    // 3. Create Session
-    const session = await stripe.checkout.sessions.create({
-        payment_method_types: ['card'],
-        line_items: lineItems,
-        mode: 'payment',
-        success_url: `${process.env.NEXT_PUBLIC_APP_URL}/app/orders/success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/app/shop`,
-        metadata: {
-            userId: user.id,
-            shippingAddress: JSON.stringify(orderInfo.shippingAddress)
-        }
-    })
+    // 4. PASO 4: Crear sesión Stripe manejando errores para evitar órdenes huérfanas
+    let session: Stripe.Checkout.Session
+    try {
+        session = await stripe.checkout.sessions.create({
+            payment_method_types: ['card'],
+            line_items: lineItems,
+            mode: 'payment',
+            success_url: `${process.env.NEXT_PUBLIC_APP_URL}/app/orders/success?session_id={CHECKOUT_SESSION_ID}`,
+            cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/app/shop`,
+            metadata: {
+                userId: user.id,
+                orderId: orderId as string, // ← NUEVO: Pasamos el ID de nuestra DB
+                shippingAddress: JSON.stringify(orderInfo.shippingAddress)
+            }
+        })
+    } catch (stripeError) {
+        console.error("[createCheckoutSession] Stripe Error:", stripeError)
+        // Cancelar orden huérfana
+        await (supabase as any).rpc('cancel_order', { p_order_id: orderId as string })
+        throw new Error("Erreur Stripe: paiement non initialisé")
+    }
 
+    // 5. PASO 5: Guardar stripe_session_id en la orden recién creada
+    await supabase
+        .from('orders')
+        .update({ stripe_session_id: session.id })
+        .eq('id', orderId)
+
+    // 6. PASO 6: Retornar url como ahora
     return { url: session.url }
 }
 
@@ -234,7 +336,7 @@ export async function createBankTransferOrder(items: CartItem[], orderInfo: Orde
 
     const { data: profile } = await supabase
         .from('profiles')
-        .select('verification_status, status')
+        .select('verification_status, status, level')
         .eq('id', user.id)
         .single()
 
@@ -242,8 +344,8 @@ export async function createBankTransferOrder(items: CartItem[], orderInfo: Orde
         throw new Error("Compte non vérifié ou inactif")
     }
 
-    // 2. Call the secure RPC (Security Guard Layer 2: DB/RPC)
-    // The RPC 'create_order_secure' uses auth.uid() internally for authorization.
+    // 2. Call the secure RPC (Sole Source of Truth)
+    // p_items must be JSONB array: [{ variant_id, qty }]
     const shippingAddress = { ...orderInfo.shippingAddress, country: 'CH' }
 
     const { data: orderId, error: rpcError } = await (supabase as any).rpc('create_order_secure', {
@@ -261,7 +363,38 @@ export async function createBankTransferOrder(items: CartItem[], orderInfo: Orde
         throw new Error(rpcError.message || "Erreur lors de la création de la commande")
     }
 
-    // 3. Fetch order reference
+    // 3. Post-Creation Integrity Check (Verification Layer)
+    // Ensure VAT and Snapshots are correctly populated for ALL users
+    const { data: createdItems, error: verifyError } = await supabase
+        .from('order_items')
+        .select('vat_amount_cents, retail_unit_price_cents, resale_factor_used')
+        .eq('order_id', orderId)
+
+    if (verifyError || !createdItems || createdItems.length === 0) {
+        throw new Error("Erreur de verification de la commande")
+    }
+
+    // BUG 1 Fix: Strict corruption logic (no isPro dependency)
+    const hasCorruption = (createdItems as any[]).some(item =>
+        item.vat_amount_cents === null ||
+        item.vat_amount_cents === 0 ||
+        item.retail_unit_price_cents === null ||
+        item.resale_factor_used === null
+    )
+
+    if (hasCorruption) {
+        console.error("[createBankTransferOrder] CORRUPTION DETECTED:", {
+            orderId,
+            userId: user.id,
+            items: createdItems
+        })
+
+        // BUG 1 Fix: Cancel inconsistent order and block flow
+        await (supabase as any).rpc('cancel_order', { p_order_id: orderId as string })
+        throw new Error("Données de commande corrompues. Contactez le support.")
+    }
+
+    // 4. Fetch order reference for confirmation
     const { data: order } = await supabase
         .from('orders')
         .select('invoice_number')

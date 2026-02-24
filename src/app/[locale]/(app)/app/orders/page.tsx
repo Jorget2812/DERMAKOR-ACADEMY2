@@ -1,8 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { FileText, Package, Calendar, Clock } from "lucide-react"
+import { FileText, Package, Calendar } from "lucide-react"
 import { Link } from '@/navigation'
 import { redirect } from 'next/navigation'
 
@@ -23,8 +23,19 @@ export default async function UserOrdersPage() {
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
 
+    const rawOrders = data as any[] || []
 
-    const orders = data as any[]
+    // Pre-generar Signed URLs para facturas existentes
+    const orders = await Promise.all(rawOrders.map(async (order) => {
+        let signedUrl = null
+        if (order.invoice_pdf_path && order.status !== 'PENDING') {
+            const { data: urlData } = await supabase.storage
+                .from('invoices')
+                .createSignedUrl(order.invoice_pdf_path, 3600)
+            signedUrl = urlData?.signedUrl
+        }
+        return { ...order, signedUrl }
+    }))
 
     return (
         <div className="space-y-8">
@@ -34,7 +45,7 @@ export default async function UserOrdersPage() {
             </header>
 
             <div className="space-y-4">
-                {!orders || orders.length === 0 ? (
+                {orders.length === 0 ? (
                     <Card className="py-12 text-center border-dashed">
                         <p className="text-muted-foreground">Vous n'avez pas encore passé de commande.</p>
                         <Link href="/app/shop" className="mt-4 inline-block">
@@ -65,11 +76,25 @@ export default async function UserOrdersPage() {
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-3">
-                                    <Button variant="outline" size="sm" className="gap-2">
-                                        <FileText size={14} /> Facture PDF
-                                    </Button>
+                                    {order.signedUrl ? (
+                                        <a href={order.signedUrl} target="_blank" rel="noopener noreferrer">
+                                            <Button variant="outline" size="sm" className="gap-2 border-primary/20 hover:border-primary/50 text-xs">
+                                                <FileText size={14} className="text-primary" /> Facture PDF
+                                            </Button>
+                                        </a>
+                                    ) : (
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className="gap-2 opacity-50 cursor-not-allowed text-xs"
+                                            disabled
+                                            title={order.status === 'PENDING' ? "Disponible après réception du paiement" : "Facture en cours de génération"}
+                                        >
+                                            <FileText size={14} /> Facture PDF
+                                        </Button>
+                                    )}
                                     <Link href={`/app/orders/${order.id}`}>
-                                        <Button size="sm" className="bg-primary hover:bg-accent transition-colors">Détails</Button>
+                                        <Button size="sm" className="bg-primary hover:bg-accent transition-colors text-xs">Détails</Button>
                                     </Link>
                                 </div>
                             </div>

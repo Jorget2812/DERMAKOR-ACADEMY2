@@ -126,8 +126,13 @@ export default async function AdminDashboard() {
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            <StockAlert item="Crème Pro-Age v2" stock={5} />
-                            <StockAlert item="Sérum Éclat Suisse" stock={2} />
+                            {statsData.lowStockItems.length > 0 ? (
+                                statsData.lowStockItems.map((item: any, i: number) => (
+                                    <StockAlert key={i} item={item.name} stock={item.stock} />
+                                ))
+                            ) : (
+                                <p className="text-[11px] text-muted-foreground italic">Aucun alerte stock.</p>
+                            )}
                         </CardContent>
                     </Card>
 
@@ -138,8 +143,8 @@ export default async function AdminDashboard() {
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="text-3xl font-bold">0</div>
-                            <p className="text-xs text-muted-foreground mt-1">Total: 0.00 CHF net</p>
+                            <div className="text-3xl font-bold">{statsData.dailyStats.count}</div>
+                            <p className="text-xs text-muted-foreground mt-1">Total: {statsData.dailyStats.total} CHF net</p>
                         </CardContent>
                     </Card>
                 </div>

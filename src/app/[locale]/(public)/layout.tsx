@@ -5,6 +5,8 @@ import { CartButton } from '@/domains/commerce/components/CartButton'
 import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 import { getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
+import { listCategoriesPublic } from '@/domains/commerce/actions'
+import { ShopDropdown } from '@/components/ShopDropdown'
 
 export default async function PublicLayout({
     children,
@@ -16,6 +18,9 @@ export default async function PublicLayout({
 
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
+
+    // Fetch categories for the nav dropdown
+    const categories = await listCategoriesPublic()
 
     return (
         <div className="flex flex-col min-h-screen bg-background">
@@ -32,8 +37,9 @@ export default async function PublicLayout({
                     </Link>
 
                     <nav className="hidden lg:flex items-center space-x-12 text-[11px] font-semibold uppercase tracking-[0.25em] text-primary/70">
-                        <Link href="/shop" className="hover:text-accent transition-all duration-300 hover:tracking-[0.3em]">{t('products')}</Link>
+                        <ShopDropdown label={t('products')} categories={categories} />
                         <Link href="/about" className="hover:text-accent transition-all duration-300 hover:tracking-[0.3em]">{t('about')}</Link>
+
                         <Link href="/academy-info" className="hover:text-accent transition-all duration-300 hover:tracking-[0.3em]">{t('academy')}</Link>
                         <Link href="/pro" className="hover:text-accent transition-all duration-300 hover:tracking-[0.3em] font-bold text-accent border border-accent/20 px-4 py-2 rounded-full bg-accent/5">{t('register')}</Link>
                         <Link href="/login" className="hover:text-accent transition-all duration-300 hover:tracking-[0.3em]">Accès Pro</Link>

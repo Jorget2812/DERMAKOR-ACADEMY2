@@ -7,11 +7,14 @@ interface AnalyticsDashboardProps {
     stats: {
         topProducts: any[]
         monthlyGrowth: { month: string, sales: number, users: number }[]
+        salesGrowth: string
+        newPros: number
+        averageBasket: string
     }
 }
 
 export function AnalyticsDashboard({ stats }: AnalyticsDashboardProps) {
-    const maxSales = Math.max(...stats.monthlyGrowth.map(m => m.sales))
+    const maxSales = Math.max(...stats.monthlyGrowth.map(m => m.sales), 1)
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
@@ -23,7 +26,9 @@ export function AnalyticsDashboard({ stats }: AnalyticsDashboardProps) {
                             <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Croissance Ventes</span>
                             <div className="bg-green-50 text-green-600 p-1 rounded-full"><TrendingUp size={12} /></div>
                         </div>
-                        <div className="text-2xl font-bold font-serif">+12.5%</div>
+                        <div className="text-2xl font-bold font-serif">
+                            {Number(stats.salesGrowth) > 0 ? '+' : ''}{stats.salesGrowth}%
+                        </div>
                         <p className="text-[10px] text-slate-400 mt-1">Comparé au mois dernier</p>
                     </CardContent>
                 </Card>
@@ -33,8 +38,8 @@ export function AnalyticsDashboard({ stats }: AnalyticsDashboardProps) {
                             <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Nouveaux Pros</span>
                             <div className="bg-blue-50 text-blue-600 p-1 rounded-full"><Users size={12} /></div>
                         </div>
-                        <div className="text-2xl font-bold font-serif">+24</div>
-                        <p className="text-[10px] text-slate-400 mt-1">Moyenne hebdomadaire</p>
+                        <div className="text-2xl font-bold font-serif">+{stats.newPros}</div>
+                        <p className="text-[10px] text-slate-400 mt-1">Nouveaux approuvés ce mois</p>
                     </CardContent>
                 </Card>
                 <Card className="border-none shadow-sm bg-white">
@@ -43,8 +48,8 @@ export function AnalyticsDashboard({ stats }: AnalyticsDashboardProps) {
                             <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Valeur Panier</span>
                             <div className="bg-amber-50 text-amber-600 p-1 rounded-full"><DollarSign size={12} /></div>
                         </div>
-                        <div className="text-2xl font-bold font-serif">412.50 CHF</div>
-                        <p className="text-[10px] text-slate-400 mt-1">Panier moyen HT</p>
+                        <div className="text-2xl font-bold font-serif">{stats.averageBasket} CHF</div>
+                        <p className="text-[10px] text-slate-400 mt-1">Panier moyen (Période)</p>
                     </CardContent>
                 </Card>
                 <Card className="border-none shadow-sm bg-accent/5 border border-accent/10">
@@ -54,7 +59,7 @@ export function AnalyticsDashboard({ stats }: AnalyticsDashboardProps) {
                             <div className="bg-accent/10 text-accent p-1 rounded-full"><ArrowUpRight size={12} /></div>
                         </div>
                         <div className="text-2xl font-bold font-serif text-accent">OPTIMAL</div>
-                        <p className="text-[10px] text-accent/60 mt-1">Toutes les API actives</p>
+                        <p className="text-[10px] text-accent/60 mt-1">Données temps réel</p>
                     </CardContent>
                 </Card>
             </div>

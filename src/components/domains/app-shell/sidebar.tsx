@@ -1,11 +1,9 @@
-'use client'
+﻿'use client'
 
-import { Link } from '@/navigation'
-import { usePathname } from 'next/navigation'
+import { Link, usePathname } from '@/navigation'
 import { logout } from '@/domains/auth/auth-actions'
 import { useState, useEffect } from 'react'
 import { getCategories } from '@/domains/commerce/actions'
-
 import { CartButton } from '@/domains/commerce/components/CartButton'
 import {
     LayoutDashboard,
@@ -15,7 +13,7 @@ import {
     ChevronRight,
     ShieldCheck,
     ChevronDown,
-    FolderOpen
+    Package
 } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { cn } from '@/lib/utils'
@@ -44,7 +42,6 @@ export default function Sidebar() {
             </div>
 
             <nav className="flex-grow p-6 space-y-1.5 mt-6 overflow-y-auto no-scrollbar">
-                {/* Dashboard */}
                 <Link
                     href="/app"
                     className={cn(
@@ -56,7 +53,6 @@ export default function Sidebar() {
                     <span>Tableau de bord</span>
                 </Link>
 
-                {/* Boutique Pro (Collapsible) */}
                 <div className="space-y-1">
                     <button
                         onClick={() => setIsBoutiqueOpen(!isBoutiqueOpen)}
@@ -86,12 +82,9 @@ export default function Sidebar() {
                                 <Link
                                     key={cat.id}
                                     href={`/app/shop?category=${cat.id}`}
-                                    className={cn(
-                                        "flex items-center gap-2 py-2 text-[10px] font-medium uppercase tracking-widest transition-colors",
-                                        pathname === `/app/shop` && new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '').get('category') === cat.id ? "text-accent" : "text-primary/50 hover:text-primary"
-                                    )}
+                                    className="flex items-center gap-2 py-2 text-[10px] font-medium uppercase tracking-widest transition-colors text-primary/50 hover:text-primary"
                                 >
-                                    <span className={cn("w-1 h-1 rounded-full", (pathname === `/app/shop` && new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '').get('category') === cat.id) ? "bg-accent" : "bg-primary/20")} />
+                                    <span className="w-1 h-1 rounded-full bg-primary/20" />
                                     {cat.name}
                                 </Link>
                             ))}
@@ -99,7 +92,18 @@ export default function Sidebar() {
                     )}
                 </div>
 
-                {/* Academy */}
+                <Link
+                    href="/app/orders"
+                    className={cn(
+                        "flex items-center gap-4 px-4 py-3 rounded-xl text-[11px] font-bold uppercase tracking-[0.15em] transition-all duration-300 group",
+                        pathname.includes('/app/orders') ? "bg-accent/5 text-accent" : "text-primary/60 hover:text-primary hover:bg-secondary"
+                    )}
+                >
+                    <Package size={18} className={cn("transition-colors", pathname.includes('/app/orders') ? "text-accent" : "text-primary/40 group-hover:text-accent")} />
+                    <span>Mes Commandes</span>
+                    <ChevronRight size={14} className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+                </Link>
+
                 <Link
                     href="/app/academy"
                     className={cn(
