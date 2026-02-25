@@ -9,6 +9,7 @@ import { createClient } from '@/lib/supabase/server'
 import { listCategoriesPublic } from '@/domains/commerce/actions'
 import { ShopDropdown } from '@/components/ShopDropdown'
 import { Footer } from '@/components/Footer'
+import { MobileNavBar } from '@/components/MobileNavBar'
 
 export default async function PublicLayout({
     children,
@@ -58,11 +59,12 @@ export default async function PublicLayout({
                 </div>
             </header>
 
-            <main className="flex-grow">
+            <main className="flex-grow pb-24 md:pb-0">
                 {children}
             </main>
 
             <Footer />
+            <MobileNavBar />
         </div>
     )
 }
