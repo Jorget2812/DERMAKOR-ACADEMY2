@@ -3,7 +3,8 @@
 import { useSearchParams } from 'next/navigation'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { AddToCartButton } from './AddToCartButton'
-import { ShoppingBag, Sparkles } from 'lucide-react'
+import { Package, Search, ShoppingCart, Filter, Star as StarIcon, ShoppingBag, Sparkles, Eye, Lock } from 'lucide-react'
+import { StarRating } from '@/components/ui/star-rating'
 import { VerifiedProduct } from '../types'
 import Image from 'next/image'
 import { cn } from '@/lib/utils'
@@ -18,8 +19,9 @@ export function ShopClient({ initialProducts }: ShopClientProps) {
     const categoryId = searchParams.get('category')
 
     const filteredProducts = categoryId
-        ? initialProducts.filter((p: VerifiedProduct) => p.category_id === categoryId)
+        ? initialProducts.filter((p: VerifiedProduct) => String(p.category_id) === String(categoryId))
         : initialProducts
+
 
     return (
         <div className="space-y-12">
@@ -27,14 +29,15 @@ export function ShopClient({ initialProducts }: ShopClientProps) {
                 {filteredProducts.map((product) => (
                     <Card key={product.variant_id} className="group flex flex-col h-full bg-white border-none shadow-[0_4px_20px_-5px_rgba(0,0,0,0.05)] hover:shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] transition-all duration-500 rounded-3xl overflow-hidden">
                         <Link href={`/app/shop/${product.slug}`} className="cursor-pointer">
-                            <CardHeader className="p-0 relative aspect-[4/5] bg-[#F9F7F5] overflow-hidden">
+                            <div className="relative w-full aspect-[4/5] overflow-hidden bg-[#F5F5F0]">
                                 {/* Product Image */}
                                 {product.images?.[0] ? (
                                     <Image
                                         src={product.images[0]}
                                         alt={product.name}
                                         fill
-                                        className="object-cover group-hover:scale-110 transition-transform duration-1000"
+                                        className="object-cover transition-transform duration-500 group-hover:scale-105"
+                                        sizes="(max-width: 768px) 50vw, 25vw"
                                     />
                                 ) : (
                                     <div className="absolute inset-0 flex items-center justify-center text-primary/10">
@@ -44,17 +47,21 @@ export function ShopClient({ initialProducts }: ShopClientProps) {
 
                                 {/* Floating Badges */}
                                 <div className="absolute inset-x-4 top-4 flex justify-between items-start z-10">
-                                    {product.discount_percent > 0 ? (
-                                        <div className="bg-accent/90 backdrop-blur-md text-white text-[10px] font-bold px-3 py-1.5 rounded-full shadow-lg">
-                                            -{product.discount_percent}%
-                                        </div>
-                                    ) : (
-                                        product.badge_text ? (
-                                            <div className="bg-primary/90 backdrop-blur-md text-white text-[10px] font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5 uppercase tracking-wider">
-                                                <Sparkles size={10} /> {product.badge_text}
+                                    <div className="flex flex-col gap-2">
+                                        {product.badge_text && (
+                                            <div
+                                                className="backdrop-blur-md text-white text-[10px] font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5 uppercase font-oswald tracking-widest"
+                                                style={{ backgroundColor: product.badge_color || '#C0A76A' }}
+                                            >
+                                                {product.badge_text}
                                             </div>
-                                        ) : <div />
-                                    )}
+                                        )}
+                                        {product.badge_secondary_text && (
+                                            <div className="bg-black/80 backdrop-blur-md text-white text-[9px] font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5 uppercase font-oswald tracking-[0.15em]">
+                                                {product.badge_secondary_text}
+                                            </div>
+                                        )}
+                                    </div>
 
                                     {product.stock_count === 0 && (
                                         <div className="bg-white/80 backdrop-blur-md text-primary/60 text-[9px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full border border-primary/5">
@@ -65,16 +72,33 @@ export function ShopClient({ initialProducts }: ShopClientProps) {
 
                                 {/* Hover Overlay */}
                                 <div className="absolute inset-0 bg-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                            </CardHeader>
-
-                            <CardContent className="p-8 flex-grow flex flex-col">
-                                <div className="space-y-1 mb-6">
-                                    <span className="text-[10px] font-mono text-primary/30 tracking-widest uppercase">
-                                        SKU: {product.sku}
-                                    </span>
-                                    <CardTitle className="text-lg font-serif tracking-tight leading-snug group-hover:text-accent transition-colors duration-300">
+                            </div>
+                            <CardContent className="p-6 flex-grow flex flex-col">
+                                <div className="space-y-2 mb-6">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <span className="text-[10px] font-mono text-primary/30 tracking-widest uppercase">
+                                            SKU: {product.sku}
+                                        </span>
+                                        {product.is_bestseller && (
+                                            <span className="text-[10px] font-bold text-[#C0A76A] uppercase tracking-[0.1em] font-oswald border border-[#C0A76A] px-2 py-0.5 rounded-[2px] bg-transparent">
+                                                Bestseller
+                                            </span>
+                                        )}
+                                    </div>
+                                    <CardTitle className="text-xl font-serif tracking-tight leading-snug group-hover:text-accent transition-colors duration-300">
                                         {product.name}
                                     </CardTitle>
+
+                                    {/* Ratings Display */}
+                                    {product.show_rating && (
+                                        <div className="mt-2">
+                                            <StarRating
+                                                rating={product.rating || 0}
+                                                count={product.rating_count}
+                                                size="sm"
+                                            />
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="mt-auto pt-6 border-t border-secondary/50">
@@ -82,16 +106,17 @@ export function ShopClient({ initialProducts }: ShopClientProps) {
                                         <div className="flex flex-col">
                                             <div className="flex items-baseline gap-2">
                                                 <span className="text-2xl font-bold tracking-tighter text-primary">
-                                                    {product.gross_price_cents / 100}
+                                                    {(product.gross_price_cents / 100).toFixed(2)}
                                                     <span className="text-xs font-medium ml-1 text-primary/40 uppercase tracking-tighter italic">CHF</span>
                                                 </span>
-                                                {product.discount_percent > 0 && (
-                                                    <span className="text-sm text-primary/20 line-through">
-                                                        {(product.base_price_cents / 100).toFixed(0)}
+                                                {product.compare_at_price_cents && product.compare_at_price_cents > 0 && (
+                                                    <span className="text-sm text-primary/30 line-through decoration-primary/20">
+                                                        {(product.compare_at_price_cents / 100).toFixed(0)}
                                                     </span>
                                                 )}
                                             </div>
-                                            <span className="text-[9px] text-primary/40 uppercase tracking-[0.1em] font-bold mt-1">
+                                            <p className="text-[10px] font-bold text-[#C0A76A] uppercase tracking-widest mt-1">Votre tarif professionnel</p>
+                                            <span className="text-[9px] text-primary/30 uppercase tracking-[0.1em] font-bold mt-1">
                                                 HT: {(product.net_price_cents / 100).toFixed(2)} CHF
                                             </span>
                                         </div>

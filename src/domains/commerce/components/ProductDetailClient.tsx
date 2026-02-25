@@ -6,6 +6,7 @@ import { PublicProduct, VerifiedProduct } from '../types'
 import Image from 'next/image'
 import { QuantitySelector } from './QuantitySelector'
 import { AddToCartButton } from './AddToCartButton'
+import { StarRating } from '@/components/ui/star-rating'
 import {
     ChevronLeft,
     ShieldCheck,
@@ -66,7 +67,7 @@ export function ProductDetailClient({ product, initialPricing, isAdmin, badgeTex
                 <div className="space-y-10">
                     <motion.div
                         layoutId={`product-image-${product.id}`}
-                        className="aspect-[4/5] relative bg-[#F9F7F5] rounded-[48px] overflow-hidden shadow-2xl shadow-primary/5 group border border-secondary/50"
+                        className="aspect-[4/5] relative bg-[#F5F5F0] rounded-[48px] overflow-hidden shadow-2xl shadow-primary/5 group border border-secondary/50"
                     >
                         {images[activeImage] ? (
                             <Image
@@ -82,11 +83,22 @@ export function ProductDetailClient({ product, initialPricing, isAdmin, badgeTex
                             </div>
                         )}
 
-                        {hasPricing && initialPricing.discount_percent > 0 && (
-                            <div className="absolute top-10 left-10 bg-accent text-white text-[11px] font-bold px-5 py-2.5 rounded-full shadow-xl backdrop-blur-md">
-                                EXCLUSIF PRO: -{initialPricing.discount_percent}%
-                            </div>
-                        )}
+                        {/* Premium Badges Overlay */}
+                        <div className="absolute top-10 left-10 flex flex-col gap-3 z-10">
+                            {(hasPricing && initialPricing.badge_text) && (
+                                <div
+                                    className="text-white text-[11px] font-bold px-5 py-2.5 rounded-full shadow-xl backdrop-blur-md uppercase font-oswald tracking-widest"
+                                    style={{ backgroundColor: initialPricing.badge_color || '#C0A76A' }}
+                                >
+                                    {initialPricing.badge_text}
+                                </div>
+                            )}
+                            {(hasPricing && initialPricing.badge_secondary_text) && (
+                                <div className="bg-black/80 text-white text-[10px] font-bold px-5 py-2.5 rounded-full shadow-xl backdrop-blur-md uppercase font-oswald tracking-[0.15em]">
+                                    {initialPricing.badge_secondary_text}
+                                </div>
+                            )}
+                        </div>
 
                         <div className="absolute bottom-8 right-8 w-16 h-16 rounded-full bg-white/80 backdrop-blur-md flex items-center justify-center text-accent shadow-lg border border-white">
                             <Microscope size={24} />
@@ -116,7 +128,14 @@ export function ProductDetailClient({ product, initialPricing, isAdmin, badgeTex
                 <div className="lg:sticky lg:top-12 h-fit space-y-16">
                     <div className="space-y-8">
                         <div className="space-y-4">
-                            <Badge content={hasPricing ? initialPricing.sku : 'PRO CATALOG'} />
+                            <div className="flex items-center justify-between mb-2">
+                                <Badge content={hasPricing ? initialPricing.sku : 'PRO CATALOG'} />
+                                {hasPricing && initialPricing.is_bestseller && (
+                                    <span className="text-[10px] font-bold text-[#C0A76A] uppercase tracking-[0.1em] font-oswald border border-[#C0A76A] px-3 py-1 rounded-[2px] bg-transparent">
+                                        Bestseller
+                                    </span>
+                                )}
+                            </div>
                             <motion.h1
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
@@ -124,6 +143,17 @@ export function ProductDetailClient({ product, initialPricing, isAdmin, badgeTex
                             >
                                 {product.name}
                             </motion.h1>
+
+                            {/* Ratings Display */}
+                            {hasPricing && initialPricing.show_rating && (
+                                <div className="mt-4">
+                                    <StarRating
+                                        rating={initialPricing.rating || 0}
+                                        count={initialPricing.rating_count}
+                                        size="lg"
+                                    />
+                                </div>
+                            )}
                         </div>
 
                         {/* Precio o Lock */}
@@ -131,20 +161,20 @@ export function ProductDetailClient({ product, initialPricing, isAdmin, badgeTex
                             <motion.div
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
-                                className="flex items-center gap-6"
+                                className="flex items-center gap-10"
                             >
                                 <div className="flex flex-col">
-                                    <span className="text-[10px] font-bold text-accent uppercase tracking-widest mb-1">Prix Pro Net</span>
-                                    <span className="text-5xl font-bold tracking-tighter text-primary">
+                                    <span className="text-[10px] font-bold text-[#C0A76A] uppercase tracking-[0.2em] mb-2 font-oswald">Votre Tarif Professionnel</span>
+                                    <span className="text-6xl font-bold tracking-tighter text-primary">
                                         {(initialPricing.gross_price_cents / 100).toFixed(2)}
                                         <span className="text-sm font-medium ml-2 text-primary/40 uppercase tracking-tighter italic">CHF</span>
                                     </span>
                                 </div>
-                                {initialPricing.discount_percent > 0 && (
-                                    <div className="flex flex-col border-l border-secondary pl-6">
-                                        <span className="text-[10px] font-bold text-primary/30 uppercase tracking-widest mb-1">Prix Public</span>
-                                        <span className="text-2xl text-primary/20 line-through decoration-1 tracking-tighter">
-                                            {(initialPricing.base_price_cents / 100).toFixed(2)}
+                                {initialPricing.compare_at_price_cents && initialPricing.compare_at_price_cents > 0 && (
+                                    <div className="flex flex-col border-l border-secondary pl-10">
+                                        <span className="text-[10px] font-bold text-primary/30 uppercase tracking-widest mb-2">Prix Public de vente</span>
+                                        <span className="text-3xl text-primary/20 line-through decoration-primary/10 tracking-tighter">
+                                            {(initialPricing.compare_at_price_cents / 100).toFixed(2)}
                                         </span>
                                     </div>
                                 )}
@@ -156,7 +186,7 @@ export function ProductDetailClient({ product, initialPricing, isAdmin, badgeTex
                                 </div>
                                 <div>
                                     <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-primary/80">Tarification Réservée</p>
-                                    <p className="text-[10px] text-primary/40 uppercase tracking-tight mt-1 leading-relaxed">Veuillez vous connecter pour accéder aux tarifs professionnels et à la commande.</p>
+                                    <p className="text-[10px] text-primary/40 uppercase tracking-tight mt-1 leading-relaxed">Veuillez vous connecter pour accéder aux tarifs profesionales et à la commande.</p>
                                 </div>
                             </div>
                         )}
@@ -246,7 +276,7 @@ export function ProductDetailClient({ product, initialPricing, isAdmin, badgeTex
                     <div className="pt-12 space-y-4">
                         <Accordion title="Protocole D'Application">
                             <p className="leading-loose">
-                                Une application précise est clé pour les résultats cliniques. Appliquer sur une peau parfaitement nettoyée matin et soir. Massez délicatement avec des mouvements ascendants jusqu’à absorption complète. Pour les traitements post-peeling, appliquer toutes les 4 heures pendant les premières 48h.
+                                Une application précise est clé pour les résultats cliniques. Appliquer sur une peau parfaitement nettoyée matin et soir. Massez délicatement avec des movimientos ascendantes jusqu’à absorption complète. Pour les traitements post-peeling, appliquer toutes les 4 heures pendant les premières 48h.
                             </p>
                         </Accordion>
                         <Accordion title="Composition & Sécurité">

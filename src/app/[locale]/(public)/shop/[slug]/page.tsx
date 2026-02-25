@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button"
 import { Link } from '@/navigation'
 import { ArrowLeft, ShieldCheck, ShoppingBag } from 'lucide-react'
 import { Badge } from "@/components/ui/badge"
+import Image from 'next/image'
 
 export default async function PublicProductPage({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = await params
@@ -21,7 +22,7 @@ export default async function PublicProductPage({ params }: { params: Promise<{ 
         )
     }
 
-    const p = product[0]
+    const p = product[0] as any
 
     return (
         <div className="container mx-auto px-4 py-12">
@@ -31,8 +32,21 @@ export default async function PublicProductPage({ params }: { params: Promise<{ 
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-24">
                 {/* Product Image Section */}
-                <div className="aspect-square bg-secondary rounded-2xl flex items-center justify-center text-muted-foreground/30 border border-border/50">
-                    <ShoppingBag size={120} strokeWidth={0.5} />
+                <div className="aspect-[4/5] relative bg-[#F5F5F0] rounded-2xl overflow-hidden shadow-2xl shadow-primary/5">
+                    {p.images?.[0] ? (
+                        <Image
+                            src={p.images[0]}
+                            alt={p.name}
+                            fill
+                            className="object-cover transition-transform duration-500 hover:scale-105"
+                            priority
+                            sizes="(max-width: 768px) 100vw, 50vw"
+                        />
+                    ) : (
+                        <div className="absolute inset-0 flex items-center justify-center text-muted-foreground/30">
+                            <ShoppingBag size={120} strokeWidth={0.5} />
+                        </div>
+                    )}
                 </div>
 
                 {/* Product Info Section */}

@@ -19,6 +19,13 @@ export interface PublicProduct {
     category_id: string | null
     images?: string[]
     created_at?: string
+    rating?: number
+    rating_count?: number
+    is_bestseller?: boolean
+    badge_text?: string | null
+    badge_color?: string | null
+    badge_secondary_text?: string | null
+    show_rating?: boolean
 }
 
 export interface VerifiedProduct {
@@ -27,6 +34,7 @@ export interface VerifiedProduct {
     name: string
     sku: string
     base_price_cents: number
+    compare_at_price_cents?: number | null
     resale_factor: number
     discount_percent: number
     net_price_cents: number
@@ -39,6 +47,12 @@ export interface VerifiedProduct {
     slug: string;
     description: string | null;
     badge_text: string | null;
+    badge_color?: string | null;
+    badge_secondary_text?: string | null;
+    show_rating?: boolean;
+    rating?: number;
+    rating_count?: number;
+    is_bestseller?: boolean;
 }
 
 

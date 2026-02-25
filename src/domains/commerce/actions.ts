@@ -14,7 +14,7 @@ export async function listProductsPublic(): Promise<PublicProduct[]> {
     const supabase = await createClient()
     const { data, error } = await supabase
         .from('products')
-        .select('id, name, slug, description, images, category_id')
+        .select('id, name, slug, description, images, category_id, rating, rating_count, is_bestseller, badge_text, badge_color, badge_secondary_text, show_rating')
         .eq('active', true)
         .order('name')
 
@@ -23,7 +23,7 @@ export async function listProductsPublic(): Promise<PublicProduct[]> {
         return []
     }
 
-    return (data || []).map(p => ({
+    return (data as any[] || []).map(p => ({
         ...p,
         images: Array.isArray(p.images) ? p.images : []
     })) as PublicProduct[]
@@ -75,7 +75,7 @@ export async function listProductsByCategorySlug(slug: string): Promise<PublicPr
 
     const { data, error } = await supabase
         .from('products')
-        .select('id, name, slug, description, images, category_id')
+        .select('id, name, slug, description, images, category_id, rating, rating_count, is_bestseller, badge_text, badge_color, badge_secondary_text, show_rating')
         .eq('active', true)
         .eq('category_id', category.id)
         .order('name')
@@ -85,7 +85,7 @@ export async function listProductsByCategorySlug(slug: string): Promise<PublicPr
         return []
     }
 
-    return (data || []).map(p => ({
+    return (data as any[] || []).map(p => ({
         ...p,
         images: Array.isArray(p.images) ? p.images : []
     })) as PublicProduct[]
@@ -163,7 +163,7 @@ export async function getProductBySlug(slug: string): Promise<PublicProduct | nu
     // Fetch from public products table (name, description, images are public)
     const { data: product, error } = await supabase
         .from('products')
-        .select('id, name, slug, description, images, category_id, created_at')
+        .select('*, category_id, created_at')
         .eq('slug', slug)
         .eq('active', true)
         .maybeSingle()
@@ -173,14 +173,10 @@ export async function getProductBySlug(slug: string): Promise<PublicProduct | nu
     }
 
     return {
-        id: product.id,
-        name: product.name,
-        slug: product.slug,
-        description: product.description,
-        category_id: product.category_id,
+        ...product,
         images: Array.isArray(product.images) ? product.images : [],
-        created_at: product.created_at || undefined
-    }
+        created_at: (product as any).created_at || undefined
+    } as PublicProduct
 }
 
 /**
@@ -268,7 +264,7 @@ export async function createCheckoutSession(items: CartItem[], orderInfo: OrderI
 
     if (orderError || !orderId) {
         console.error("[createCheckoutSession] Order creation error:", orderError)
-        throw new Error("Erreur création commande")
+        throw new Error("Erreur creación commande")
     }
 
     const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = []
