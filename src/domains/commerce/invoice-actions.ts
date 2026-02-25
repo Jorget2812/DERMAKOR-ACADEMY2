@@ -52,7 +52,7 @@ export async function getAdminInvoiceSettings() {
     // Fallback default row if none exists (shouldn't happen with migration but for robustness)
     if (!data) {
         return {
-            company_name: 'DERMAKOR ACADEMY',
+            company_name: 'DERMAKOR SWISS',
             company_address: '',
             company_city: '',
             company_zip: '',

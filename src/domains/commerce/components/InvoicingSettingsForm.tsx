@@ -34,7 +34,7 @@ export function InvoicingSettingsForm({ initialSettings }: InvoicingSettingsForm
     const [paymentData, setPaymentData] = useState<any>(null)
     const [settings, setSettings] = useState<Partial<InvoiceSettings>>(initialSettings || {
         use_payment_data: true,
-        company_name: 'DERMAKOR ACADEMY',
+        company_name: 'DERMAKOR SWISS',
         company_address: '',
         company_city: '',
         company_zip: '',
@@ -217,7 +217,7 @@ export function InvoicingSettingsForm({ initialSettings }: InvoicingSettingsForm
                     <div className="space-y-6">
                         <div className="space-y-2">
                             <Label htmlFor="footer_text" className="text-xs font-bold text-slate-500 uppercase">Bas de page (Footer)</Label>
-                            <Textarea id="footer_text" value={settings.footer_text || ''} onChange={handleChange} placeholder="Ex: Dermakor Academy | Switzerland | ide: CHE-XXX..." className="rounded-xl min-h-[80px]" />
+                            <Textarea id="footer_text" value={settings.footer_text || ''} onChange={handleChange} placeholder="Ex: DermaKor Swiss | Switzerland | ide: CHE-XXX..." className="rounded-xl min-h-[80px]" />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="terms_text" className="text-xs font-bold text-slate-500 uppercase">Notes / Conditions de Paiement</Label>
@@ -251,7 +251,7 @@ export function InvoicingSettingsForm({ initialSettings }: InvoicingSettingsForm
                         {/* Header Preview */}
                         <div className="flex justify-between items-start border-b border-slate-100 pb-6">
                             <div className="space-y-1">
-                                <p className="font-bold text-[14px] text-primary tracking-tight">{settings.company_name?.toUpperCase() || 'DERMAKOR ACADEMY'}</p>
+                                <p className="font-bold text-[14px] text-primary tracking-tight">{settings.company_name?.toUpperCase() || 'DERMAKOR SWISS'}</p>
                                 <p className="text-slate-500 whitespace-pre-line max-w-[140px] leading-tight">
                                     {settings.company_address || 'Ch des Champs-Courbes 1'}
                                     <br />
@@ -322,7 +322,7 @@ export function InvoicingSettingsForm({ initialSettings }: InvoicingSettingsForm
                             <div className="space-y-1">
                                 <p className="font-bold uppercase tracking-widest text-[8px] text-primary">{settings.company_name}</p>
                                 <p className="text-[8px] whitespace-pre-line text-slate-400">
-                                    {settings.footer_text || 'Dermakor Academy | Switzerland | ide: CHE-XXX.XXX.XXX'}
+                                    {settings.footer_text || 'DermaKor Swiss | Switzerland | ide: CHE-XXX.XXX.XXX'}
                                 </p>
                             </div>
                         </div>

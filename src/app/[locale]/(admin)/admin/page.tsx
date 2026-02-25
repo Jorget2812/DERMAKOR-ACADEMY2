@@ -29,7 +29,7 @@ export default async function AdminDashboard() {
         <div className="space-y-10">
             <header>
                 <h1 className="text-3xl font-serif text-primary">Tableau de bord de gestion</h1>
-                <p className="text-muted-foreground mt-1 text-sm font-light">Vue d'ensemble de l'activité Dermakor Academy & Shop.</p>
+                <p className="text-muted-foreground mt-1 text-sm font-light">Vue d'ensemble de l'activité DermaKor Swiss &amp; Shop.</p>
             </header>
 
             {/* KPI Cards */}

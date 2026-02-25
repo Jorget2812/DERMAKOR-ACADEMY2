@@ -4,24 +4,74 @@ import { Link } from '@/navigation'
 import { Button } from "@/components/ui/button"
 import { ArrowLeft, ExternalLink } from 'lucide-react'
 
-const PAGE_DEFAULTS: Record<string, string> = {
-    hero_title: "L'Élite de la Beauté pour les Professionnels",
-    hero_subtitle: "Formations certifiantes et boutique exclusive de produits dermo-esthétiques haute performance. Réservé aux experts.",
-    hero_badge: "Expertise Suisse en Dermo-Esthétique",
-    cta_primary: "S'inscrire comme Professionnel",
-    cta_secondary: "Découvrir la Collection",
-    value1_title: "Qualité Suisse",
-    value1_desc: "Des standards de fabrication exigeants et des formulations scientifiquement prouvées.",
-    value2_title: "Accès Restreint",
-    value2_desc: "Une plateforme sécurisée exclusivement dédiée aux instituts et cliniques esthétiques.",
-    value3_title: "Académie Masterclass",
-    value3_desc: "Apprentissage continu avec des experts internationaux et des protocoles innovants.",
-    dual_section_title: "Une double plateforme pour votre croissance",
-    boutique_desc: "Commandez vos produits cabine et revente avec des remises échelonnées jusqu'à 50% selon votre statut.",
-    academy_desc: "Plus de 20 modules de formation vidéo, supports PDF et quiz pour certifier vos compétences.",
-    cta_section_title: "Rejoignez l'élite dermo-esthétique",
-    cta_section_subtitle: "Vérification de compte en moins de 24h pour les professionnels suisses éligibles.",
-    footer_desc: "Elite Dermo-Esthétique en Suisse. Formations professionnelles et boutique exclusive.",
+const D: Record<string, string> = {
+    /* HERO */
+    hero_overtitle: 'IMPORTATEUR OFFICIEL KRX AESTHETICS • SUISSE',
+    hero_title_line1: "L'Excellence",
+    hero_title_line2: 'Cosméceutique Coréenne',
+    hero_subtitle: 'Importateur Officiel KRX Aesthetics • Suisse',
+    hero_cta_label: "Découvrir l'Essentiel",
+    hero_cta_link: '/shop',
+    hero_image: '/images/hero-bg.png',
+    /* STATEMENT */
+    stmt_text: "Nous apportons l'innovation dermocosmétique coréenne la plus avancée au monde pour les professionnels suisses exigeants.",
+    stmt_highlight: 'innovation dermocosmétique coréenne',
+    stmt_note: "← Fondé sur 15 ans d'expertise KRX",
+    /* FIGURES */
+    fig1_number: '+120', fig1_label: 'Produits Professionnels',
+    fig2_number: '+15 ans', fig2_label: "d'Innovation KRX",
+    fig3_number: '100%', fig3_label: 'Grade Clinique',
+    fig4_number: '🇨🇭', fig4_label: 'Distribution Suisse Officielle',
+    /* COLLECTIONS */
+    col_overtitle: 'NOS COLLECTIONS',
+    col_title: "Découvrez l'Expertise KRX",
+    col1_name: 'Meso Booster Ampoule', col1_category: 'Traitement Intensif', col1_link: '/shop/category/mesobooster-ampoule', col1_image: '/images/col-meso.jpg',
+    col2_name: 'Soin Peeling', col2_category: 'Exfoliation Professionnelle', col2_link: '/shop/category/peeling', col2_image: '/images/col-peeling.jpg',
+    col3_name: 'Crème Régénérante', col3_category: 'Régénération Cellulaire', col3_link: '/shop/category/creme', col3_image: '/images/col-creme.jpg',
+    col4_name: 'Contour des Yeux', col4_category: 'Soin Regard', col4_link: '/shop/category/contour-yeux', col4_image: '/images/col-yeux.jpg',
+    col5_name: 'Complexe Vitamine C', col5_category: 'Éclat & Uniformité', col5_link: '/shop/category/vitamine-c', col5_image: '/images/col-vitc.jpg',
+    col6_name: 'Green Sea Peel', col6_category: 'Traitement Signature', col6_link: '/shop/category/green-sea-peel', col6_image: '/images/col-gsp.jpg',
+    /* SIGNATURE */
+    sig_badge: 'TRAITEMENT SIGNATURE',
+    sig_title_line1: 'Green Sea Peel',
+    sig_title_line2: 'Biomicroaiguilles',
+    sig_description: "Le seul peeling 100% naturel à base d'algues micronisées. Agit en profondeur pour régénérer, purifier et révéler la peau.",
+    sig_warning: '⚠️ Réservé aux professionnels certifiés. Formation préalable obligatoire auprès de DermaKor Swiss.',
+    sig_cta_label: 'En savoir plus', sig_cta_link: '/shop', sig_image: '/images/signature-gsp.jpg',
+    /* SCIENCE */
+    sci_overtitle: 'LA SCIENCE DERRIÈRE KRX',
+    sci_title: "Des actifs d'exception pour des résultats exceptionnels",
+    sci_feature1_title: 'Actifs Ultra-Concentrés', sci_feature1_desc: 'Formules de grade clinique à efficacité prouvée en laboratoire.',
+    sci_feature2_title: 'Biotechnologie Coréenne', sci_feature2_desc: "15 ans d'R&D intégrant les découvertes dermato les plus récentes.",
+    sci_feature3_title: 'Standards Suisses', sci_feature3_desc: 'Distribution conforme aux exigences réglementaires helvétiques.',
+    sci_footnote: 'Tous nos produits sont enregistrés auprès de Swissmedic.',
+    sci_image: '/images/science-editorial.jpg',
+    /* CERTIFICATIONS */
+    cert_label1: 'KFDA', cert_label2: 'CGMP', cert_label3: 'ISO 22716', cert_label4: 'Swiss Certified', cert_label5: 'KRX Official',
+    /* TRANSFORMATIONS */
+    transf_overtitle: 'TRANSFORMATIONS RÉELLES',
+    transf_title: 'Résultats Documentés & Prouvés Cliniquement',
+    transf_badge: 'RÉSULTAT VÉRIFIÉ',
+    transf1_label: 'Traitement Anti-Âge', transf1_image: '/images/transf-1.jpg',
+    transf2_label: 'Traitement Anti-Acné', transf2_image: '/images/transf-2.jpg',
+    transf3_label: 'Réjuvénation Globale', transf3_image: '/images/transf-3.jpg',
+    /* CTA */
+    cta_overtitle: 'DEVENIR PARTENAIRE',
+    cta_title_line1: 'Rejoignez le Réseau',
+    cta_title_line2: "d'Excellence Suisse",
+    cta_subtitle: 'Accédez aux tarifs professionnels, aux formations certifiées et à un support commercial dédié.',
+    cta_btn_primary_label: "Demande d'Accès Professionnel", cta_btn_primary_link: '/pro',
+    cta_btn_secondary_label: 'Nous Contacter', cta_btn_secondary_link: '/contact',
+    cta_note: 'Vérification professionnelle sous 24-48h',
+    /* FOOTER */
+    footer_brand: 'DERMAKOR SWISS',
+    footer_tagline: 'Importateur Officiel KRX Aesthetics · Suisse',
+    footer_col1_title: 'Navigation', footer_col1_link1_label: 'Accueil', footer_col1_link1_href: '/', footer_col1_link2_label: 'Boutique', footer_col1_link2_href: '/shop', footer_col1_link3_label: 'Formations', footer_col1_link3_href: '/academy-info', footer_col1_link4_label: 'À Propos', footer_col1_link4_href: '/about',
+    footer_col2_title: 'Produits', footer_col2_link1_label: 'Meso Booster', footer_col2_link1_href: '/shop/category/mesobooster-ampoule', footer_col2_link2_label: 'Soin Peeling', footer_col2_link2_href: '/shop/category/peeling', footer_col2_link3_label: 'Crème', footer_col2_link3_href: '/shop/category/creme', footer_col2_link4_label: 'Green Sea Peel', footer_col2_link4_href: '/shop/category/green-sea-peel',
+    footer_col3_title: 'Support', footer_col3_link1_label: "Demande d'Accès", footer_col3_link1_href: '/pro', footer_col3_link2_label: 'FAQ', footer_col3_link2_href: '/faq', footer_col3_link3_label: 'Contact', footer_col3_link3_href: '/contact',
+    footer_col4_title: 'Contact', footer_phone: '+41 78 326 71 51', footer_email: 'info@dermakorswiss.com', footer_address1: 'Chem. des Champs Courbes 1, 1024 Ecublens', footer_address2: 'Cuvillard 21, 1302 Vufflens-la-Ville', footer_hours: 'Lun–Ven : 9h00 – 16h00',
+    footer_legal1_label: 'CGV', footer_legal1_href: '/cgv', footer_legal2_label: 'Confidentialité', footer_legal2_href: '/privacy',
+    footer_copyright: '© 2025 DermaKor Swiss Sàrl. Made in Switzerland 🇨🇭',
 }
 
 export default async function HomePageEditor() {
@@ -37,8 +87,10 @@ export default async function HomePageEditor() {
                         </Button>
                     </Link>
                     <div>
-                        <h1 className="text-3xl font-serif text-primary">Page d'Accueil</h1>
-                        <p className="text-muted-foreground mt-1 text-sm">Modifiez les textes de la page principale.</p>
+                        <h1 className="text-3xl font-serif text-primary">Page d&apos;Accueil</h1>
+                        <p className="text-muted-foreground mt-1 text-sm">
+                            <span className="text-amber-600 font-semibold">Tous les champs sont éditables</span> — Aucun texte n'est codé en dur.
+                        </p>
                     </div>
                 </div>
                 <Link href="/" target="_blank">
@@ -52,50 +104,215 @@ export default async function HomePageEditor() {
                 pageSlug="home"
                 pageName="Page d'Accueil"
                 currentContent={content}
-                defaultContent={PAGE_DEFAULTS}
+                defaultContent={D}
                 sections={[
+                    /* ═══ HERO ═══ */
                     {
-                        title: "🏠 Section Hero (Bannière Principale)",
+                        title: '🏠 Section Hero (Bannière principale)',
                         fields: [
-                            { key: 'hero_badge', label: 'Badge', type: 'text', description: 'Petit badge au-dessus du titre.', placeholder: PAGE_DEFAULTS.hero_badge },
-                            { key: 'hero_title', label: 'Titre Principal', type: 'textarea', description: 'Le grand titre de la page.', placeholder: PAGE_DEFAULTS.hero_title },
-                            { key: 'hero_subtitle', label: 'Sous-titre', type: 'textarea', description: 'Le texte descriptif sous le titre.', placeholder: PAGE_DEFAULTS.hero_subtitle },
-                            { key: 'cta_primary', label: 'Bouton Principal (CTA)', type: 'text', description: 'Texte du bouton doré.', placeholder: PAGE_DEFAULTS.cta_primary },
-                            { key: 'cta_secondary', label: 'Bouton Secondaire', type: 'text', placeholder: PAGE_DEFAULTS.cta_secondary },
+                            { key: 'hero_title_line1', label: "Titre ligne 1 (ex: L'Excellence)", type: 'text', placeholder: D.hero_title_line1 },
+                            { key: 'hero_title_line2', label: 'Titre ligne 2 en doré (ex: Cosméceutique Coréenne)', type: 'text', placeholder: D.hero_title_line2 },
+                            { key: 'hero_subtitle', label: 'Sous-titre (petit texte uppercase sous le titre)', type: 'text', placeholder: D.hero_subtitle },
+                            { key: 'hero_cta_label', label: 'Bouton — Texte', type: 'text', placeholder: D.hero_cta_label },
+                            { key: 'hero_cta_link', label: 'Bouton — Lien URL', type: 'text', placeholder: D.hero_cta_link },
+                            { key: 'hero_image', label: 'Image de fond (URL complète ou /images/...)', type: 'text', description: 'Ex: /images/hero-bg.png', placeholder: D.hero_image },
+                        ]
+                    },
+                    /* ═══ BRAND STATEMENT ═══ */
+                    {
+                        title: '💬 Section Manifeste de Marque',
+                        fields: [
+                            { key: 'stmt_text', label: 'Texte complet (grande phrase manifeste)', type: 'textarea', placeholder: D.stmt_text },
+                            { key: 'stmt_highlight', label: 'Mots à mettre en doré (doit correspondre exactement à une partie du texte)', type: 'text', placeholder: D.stmt_highlight },
+                            { key: 'stmt_note', label: 'Note bas droite', type: 'text', placeholder: D.stmt_note },
+                        ]
+                    },
+                    /* ═══ KEY FIGURES ═══ */
+                    {
+                        title: '📊 Chiffres Clés (4 compteurs)',
+                        fields: [
+                            { key: 'fig1_number', label: 'Chiffre 1', type: 'text', placeholder: D.fig1_number },
+                            { key: 'fig1_label', label: 'Chiffre 1 — Label', type: 'text', placeholder: D.fig1_label },
+                            { key: 'fig2_number', label: 'Chiffre 2', type: 'text', placeholder: D.fig2_number },
+                            { key: 'fig2_label', label: 'Chiffre 2 — Label', type: 'text', placeholder: D.fig2_label },
+                            { key: 'fig3_number', label: 'Chiffre 3', type: 'text', placeholder: D.fig3_number },
+                            { key: 'fig3_label', label: 'Chiffre 3 — Label', type: 'text', placeholder: D.fig3_label },
+                            { key: 'fig4_number', label: 'Chiffre 4 (emoji ok)', type: 'text', placeholder: D.fig4_number },
+                            { key: 'fig4_label', label: 'Chiffre 4 — Label', type: 'text', placeholder: D.fig4_label },
+                        ]
+                    },
+                    /* ═══ COLLECTIONS ═══ */
+                    {
+                        title: '🛍️ Collections / Best-Sellers (6 cards)',
+                        fields: [
+                            { key: 'col_overtitle', label: 'Sur-titre section', type: 'text', placeholder: D.col_overtitle },
+                            { key: 'col_title', label: 'Titre section (H2)', type: 'text', placeholder: D.col_title },
+                            { key: 'col1_name', label: 'Col. 1 — Nom', type: 'text', placeholder: D.col1_name },
+                            { key: 'col1_category', label: 'Col. 1 — Catégorie', type: 'text', placeholder: D.col1_category },
+                            { key: 'col1_link', label: 'Col. 1 — Lien', type: 'text', placeholder: D.col1_link },
+                            { key: 'col1_image', label: 'Col. 1 — Image URL', type: 'text', placeholder: D.col1_image },
+                            { key: 'col2_name', label: 'Col. 2 — Nom', type: 'text', placeholder: D.col2_name },
+                            { key: 'col2_category', label: 'Col. 2 — Catégorie', type: 'text', placeholder: D.col2_category },
+                            { key: 'col2_link', label: 'Col. 2 — Lien', type: 'text', placeholder: D.col2_link },
+                            { key: 'col2_image', label: 'Col. 2 — Image URL', type: 'text', placeholder: D.col2_image },
+                            { key: 'col3_name', label: 'Col. 3 — Nom', type: 'text', placeholder: D.col3_name },
+                            { key: 'col3_category', label: 'Col. 3 — Catégorie', type: 'text', placeholder: D.col3_category },
+                            { key: 'col3_link', label: 'Col. 3 — Lien', type: 'text', placeholder: D.col3_link },
+                            { key: 'col3_image', label: 'Col. 3 — Image URL', type: 'text', placeholder: D.col3_image },
+                            { key: 'col4_name', label: 'Col. 4 — Nom', type: 'text', placeholder: D.col4_name },
+                            { key: 'col4_category', label: 'Col. 4 — Catégorie', type: 'text', placeholder: D.col4_category },
+                            { key: 'col4_link', label: 'Col. 4 — Lien', type: 'text', placeholder: D.col4_link },
+                            { key: 'col4_image', label: 'Col. 4 — Image URL', type: 'text', placeholder: D.col4_image },
+                            { key: 'col5_name', label: 'Col. 5 — Nom', type: 'text', placeholder: D.col5_name },
+                            { key: 'col5_category', label: 'Col. 5 — Catégorie', type: 'text', placeholder: D.col5_category },
+                            { key: 'col5_link', label: 'Col. 5 — Lien', type: 'text', placeholder: D.col5_link },
+                            { key: 'col5_image', label: 'Col. 5 — Image URL', type: 'text', placeholder: D.col5_image },
+                            { key: 'col6_name', label: 'Col. 6 — Nom', type: 'text', placeholder: D.col6_name },
+                            { key: 'col6_category', label: 'Col. 6 — Catégorie', type: 'text', placeholder: D.col6_category },
+                            { key: 'col6_link', label: 'Col. 6 — Lien', type: 'text', placeholder: D.col6_link },
+                            { key: 'col6_image', label: 'Col. 6 — Image URL', type: 'text', placeholder: D.col6_image },
+                        ]
+                    },
+                    /* ═══ SIGNATURE ═══ */
+                    {
+                        title: '💎 Produit Signature (Green Sea Peel)',
+                        fields: [
+                            { key: 'sig_badge', label: 'Badge (ex: TRAITEMENT SIGNATURE)', type: 'text', placeholder: D.sig_badge },
+                            { key: 'sig_title_line1', label: 'Titre ligne 1', type: 'text', placeholder: D.sig_title_line1 },
+                            { key: 'sig_title_line2', label: 'Titre ligne 2 en doré italic', type: 'text', placeholder: D.sig_title_line2 },
+                            { key: 'sig_description', label: 'Description', type: 'textarea', placeholder: D.sig_description },
+                            { key: 'sig_warning', label: 'Avertissement professionnel', type: 'textarea', placeholder: D.sig_warning },
+                            { key: 'sig_cta_label', label: 'Bouton — Texte', type: 'text', placeholder: D.sig_cta_label },
+                            { key: 'sig_cta_link', label: 'Bouton — Lien', type: 'text', placeholder: D.sig_cta_link },
+                            { key: 'sig_image', label: 'Image produit (URL)', type: 'text', placeholder: D.sig_image },
+                        ]
+                    },
+                    /* ═══ SCIENCE ═══ */
+                    {
+                        title: '🔬 La Science (section éditoriale)',
+                        fields: [
+                            { key: 'sci_overtitle', label: 'Sur-titre', type: 'text', placeholder: D.sci_overtitle },
+                            { key: 'sci_title', label: 'Titre (H2)', type: 'textarea', placeholder: D.sci_title },
+                            { key: 'sci_feature1_title', label: 'Point 1 — Titre', type: 'text', placeholder: D.sci_feature1_title },
+                            { key: 'sci_feature1_desc', label: 'Point 1 — Description', type: 'textarea', placeholder: D.sci_feature1_desc },
+                            { key: 'sci_feature2_title', label: 'Point 2 — Titre', type: 'text', placeholder: D.sci_feature2_title },
+                            { key: 'sci_feature2_desc', label: 'Point 2 — Description', type: 'textarea', placeholder: D.sci_feature2_desc },
+                            { key: 'sci_feature3_title', label: 'Point 3 — Titre', type: 'text', placeholder: D.sci_feature3_title },
+                            { key: 'sci_feature3_desc', label: 'Point 3 — Description', type: 'textarea', placeholder: D.sci_feature3_desc },
+                            { key: 'sci_footnote', label: 'Note bas de section', type: 'text', placeholder: D.sci_footnote },
+                            { key: 'sci_image', label: 'Image éditoriale (URL)', type: 'text', placeholder: D.sci_image },
+                        ]
+                    },
+                    /* ═══ CERTIFICATIONS ═══ */
+                    {
+                        title: '✅ Certifications (5 logos/labels)',
+                        fields: [
+                            { key: 'cert_label1', label: 'Certification 1', type: 'text', placeholder: D.cert_label1 },
+                            { key: 'cert_label2', label: 'Certification 2', type: 'text', placeholder: D.cert_label2 },
+                            { key: 'cert_label3', label: 'Certification 3', type: 'text', placeholder: D.cert_label3 },
+                            { key: 'cert_label4', label: 'Certification 4', type: 'text', placeholder: D.cert_label4 },
+                            { key: 'cert_label5', label: 'Certification 5', type: 'text', placeholder: D.cert_label5 },
+                        ]
+                    },
+                    /* ═══ TRANSFORMATIONS ═══ */
+                    {
+                        title: '📸 Galerie Transformations (3 images)',
+                        fields: [
+                            { key: 'transf_overtitle', label: 'Sur-titre section', type: 'text', placeholder: D.transf_overtitle },
+                            { key: 'transf_title', label: 'Titre section (H2)', type: 'text', placeholder: D.transf_title },
+                            { key: 'transf_badge', label: 'Badge sur les images', type: 'text', placeholder: D.transf_badge },
+                            { key: 'transf1_label', label: 'Image 1 — Label', type: 'text', placeholder: D.transf1_label },
+                            { key: 'transf1_image', label: 'Image 1 — URL', type: 'text', placeholder: D.transf1_image },
+                            { key: 'transf2_label', label: 'Image 2 — Label', type: 'text', placeholder: D.transf2_label },
+                            { key: 'transf2_image', label: 'Image 2 — URL', type: 'text', placeholder: D.transf2_image },
+                            { key: 'transf3_label', label: 'Image 3 — Label', type: 'text', placeholder: D.transf3_label },
+                            { key: 'transf3_image', label: 'Image 3 — URL', type: 'text', placeholder: D.transf3_image },
+                        ]
+                    },
+                    /* ═══ CTA FINAL ═══ */
+                    {
+                        title: '🎯 Section CTA Final (Devenir Partenaire)',
+                        fields: [
+                            { key: 'cta_overtitle', label: 'Sur-titre', type: 'text', placeholder: D.cta_overtitle },
+                            { key: 'cta_title_line1', label: 'Titre ligne 1', type: 'text', placeholder: D.cta_title_line1 },
+                            { key: 'cta_title_line2', label: 'Titre ligne 2 (en doré)', type: 'text', placeholder: D.cta_title_line2 },
+                            { key: 'cta_subtitle', label: 'Sous-titre/Description', type: 'textarea', placeholder: D.cta_subtitle },
+                            { key: 'cta_btn_primary_label', label: 'Bouton principal — Texte', type: 'text', placeholder: D.cta_btn_primary_label },
+                            { key: 'cta_btn_primary_link', label: 'Bouton principal — Lien', type: 'text', placeholder: D.cta_btn_primary_link },
+                            { key: 'cta_btn_secondary_label', label: 'Bouton secondaire — Texte', type: 'text', placeholder: D.cta_btn_secondary_label },
+                            { key: 'cta_btn_secondary_link', label: 'Bouton secondaire — Lien', type: 'text', placeholder: D.cta_btn_secondary_link },
+                            { key: 'cta_note', label: 'Note sous les boutons', type: 'text', placeholder: D.cta_note },
+                        ]
+                    },
+                    /* ═══ FOOTER ═══ */
+                    {
+                        title: '🏷️ Footer — Identité de Marque',
+                        fields: [
+                            { key: 'footer_brand', label: 'Nom de marque (logo texte)', type: 'text', placeholder: D.footer_brand },
+                            { key: 'footer_tagline', label: 'Tagline sous le logo', type: 'text', placeholder: D.footer_tagline },
+                            { key: 'footer_copyright', label: 'Copyright (bas de page)', type: 'text', placeholder: D.footer_copyright },
                         ]
                     },
                     {
-                        title: "⭐ Section Valeurs",
+                        title: '🔗 Footer — Colonne Navigation',
                         fields: [
-                            { key: 'value1_title', label: 'Valeur 1 — Titre', type: 'text', placeholder: PAGE_DEFAULTS.value1_title },
-                            { key: 'value1_desc', label: 'Valeur 1 — Description', type: 'textarea', placeholder: PAGE_DEFAULTS.value1_desc },
-                            { key: 'value2_title', label: 'Valeur 2 — Titre', type: 'text', placeholder: PAGE_DEFAULTS.value2_title },
-                            { key: 'value2_desc', label: 'Valeur 2 — Description', type: 'textarea', placeholder: PAGE_DEFAULTS.value2_desc },
-                            { key: 'value3_title', label: 'Valeur 3 — Titre', type: 'text', placeholder: PAGE_DEFAULTS.value3_title },
-                            { key: 'value3_desc', label: 'Valeur 3 — Description', type: 'textarea', placeholder: PAGE_DEFAULTS.value3_desc },
+                            { key: 'footer_col1_title', label: 'Titre colonne', type: 'text', placeholder: D.footer_col1_title },
+                            { key: 'footer_col1_link1_label', label: 'Lien 1 — Texte', type: 'text', placeholder: D.footer_col1_link1_label },
+                            { key: 'footer_col1_link1_href', label: 'Lien 1 — URL', type: 'text', placeholder: D.footer_col1_link1_href },
+                            { key: 'footer_col1_link2_label', label: 'Lien 2 — Texte', type: 'text', placeholder: D.footer_col1_link2_label },
+                            { key: 'footer_col1_link2_href', label: 'Lien 2 — URL', type: 'text', placeholder: D.footer_col1_link2_href },
+                            { key: 'footer_col1_link3_label', label: 'Lien 3 — Texte', type: 'text', placeholder: D.footer_col1_link3_label },
+                            { key: 'footer_col1_link3_href', label: 'Lien 3 — URL', type: 'text', placeholder: D.footer_col1_link3_href },
+                            { key: 'footer_col1_link4_label', label: 'Lien 4 — Texte', type: 'text', placeholder: D.footer_col1_link4_label },
+                            { key: 'footer_col1_link4_href', label: 'Lien 4 — URL', type: 'text', placeholder: D.footer_col1_link4_href },
                         ]
                     },
                     {
-                        title: "🛍️ Section Double Expérience",
+                        title: '🛍️ Footer — Colonne Produits',
                         fields: [
-                            { key: 'dual_section_title', label: 'Titre de Section', type: 'textarea', placeholder: PAGE_DEFAULTS.dual_section_title },
-                            { key: 'boutique_desc', label: 'Description Boutique', type: 'textarea', placeholder: PAGE_DEFAULTS.boutique_desc },
-                            { key: 'academy_desc', label: 'Description Académie', type: 'textarea', placeholder: PAGE_DEFAULTS.academy_desc },
+                            { key: 'footer_col2_title', label: 'Titre colonne', type: 'text', placeholder: D.footer_col2_title },
+                            { key: 'footer_col2_link1_label', label: 'Lien 1 — Texte', type: 'text', placeholder: D.footer_col2_link1_label },
+                            { key: 'footer_col2_link1_href', label: 'Lien 1 — URL', type: 'text', placeholder: D.footer_col2_link1_href },
+                            { key: 'footer_col2_link2_label', label: 'Lien 2 — Texte', type: 'text', placeholder: D.footer_col2_link2_label },
+                            { key: 'footer_col2_link2_href', label: 'Lien 2 — URL', type: 'text', placeholder: D.footer_col2_link2_href },
+                            { key: 'footer_col2_link3_label', label: 'Lien 3 — Texte', type: 'text', placeholder: D.footer_col2_link3_label },
+                            { key: 'footer_col2_link3_href', label: 'Lien 3 — URL', type: 'text', placeholder: D.footer_col2_link3_href },
+                            { key: 'footer_col2_link4_label', label: 'Lien 4 — Texte', type: 'text', placeholder: D.footer_col2_link4_label },
+                            { key: 'footer_col2_link4_href', label: 'Lien 4 — URL', type: 'text', placeholder: D.footer_col2_link4_href },
                         ]
                     },
                     {
-                        title: "🎯 Section Appel à l'Action Final",
+                        title: '💬 Footer — Colonne Support',
                         fields: [
-                            { key: 'cta_section_title', label: 'Titre', type: 'text', placeholder: PAGE_DEFAULTS.cta_section_title },
-                            { key: 'cta_section_subtitle', label: 'Sous-titre', type: 'textarea', placeholder: PAGE_DEFAULTS.cta_section_subtitle },
+                            { key: 'footer_col3_title', label: 'Titre colonne', type: 'text', placeholder: D.footer_col3_title },
+                            { key: 'footer_col3_link1_label', label: 'Lien 1 — Texte', type: 'text', placeholder: D.footer_col3_link1_label },
+                            { key: 'footer_col3_link1_href', label: 'Lien 1 — URL', type: 'text', placeholder: D.footer_col3_link1_href },
+                            { key: 'footer_col3_link2_label', label: 'Lien 2 — Texte', type: 'text', placeholder: D.footer_col3_link2_label },
+                            { key: 'footer_col3_link2_href', label: 'Lien 2 — URL', type: 'text', placeholder: D.footer_col3_link2_href },
+                            { key: 'footer_col3_link3_label', label: 'Lien 3 — Texte', type: 'text', placeholder: D.footer_col3_link3_label },
+                            { key: 'footer_col3_link3_href', label: 'Lien 3 — URL', type: 'text', placeholder: D.footer_col3_link3_href },
                         ]
                     },
                     {
-                        title: "📝 Pied de Page (Footer)",
+                        title: '📞 Footer — Colonne Contact & Adresses',
                         fields: [
-                            { key: 'footer_desc', label: 'Description Footer', type: 'textarea', placeholder: PAGE_DEFAULTS.footer_desc },
+                            { key: 'footer_col4_title', label: 'Titre colonne', type: 'text', placeholder: D.footer_col4_title },
+                            { key: 'footer_phone', label: 'Téléphone', type: 'text', placeholder: D.footer_phone },
+                            { key: 'footer_email', label: 'Email', type: 'text', placeholder: D.footer_email },
+                            { key: 'footer_address1', label: 'Adresse siège', type: 'text', placeholder: D.footer_address1 },
+                            { key: 'footer_address2', label: 'Adresse dépôt', type: 'text', placeholder: D.footer_address2 },
+                            { key: 'footer_hours', label: 'Horaires', type: 'text', placeholder: D.footer_hours },
                         ]
-                    }
+                    },
+                    {
+                        title: '⚖️ Footer — Liens Légaux',
+                        fields: [
+                            { key: 'footer_legal1_label', label: 'Lien légal 1 — Texte', type: 'text', placeholder: D.footer_legal1_label },
+                            { key: 'footer_legal1_href', label: 'Lien légal 1 — URL', type: 'text', placeholder: D.footer_legal1_href },
+                            { key: 'footer_legal2_label', label: 'Lien légal 2 — Texte', type: 'text', placeholder: D.footer_legal2_label },
+                            { key: 'footer_legal2_href', label: 'Lien légal 2 — URL', type: 'text', placeholder: D.footer_legal2_href },
+                        ]
+                    },
                 ]}
             />
         </div>

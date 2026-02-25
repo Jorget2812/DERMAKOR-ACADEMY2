@@ -23,26 +23,29 @@ export async function submitVerification(data: VerificationRequestForm) {
         .insert([{
             full_name: validated.data.fullName,
             email: validated.data.email,
-            phone_personal: validated.data.phonePersonal,
-            company_name: validated.data.companyName,
-            ide_situation: validated.data.ideSituation ?? '',
             phone_pro: validated.data.phonePro,
-            expertise_domain: validated.data.expertiseDomain ?? '',
-            website: validated.data.website,
-            address_pro: validated.data.addressPro ?? '',
-            message: validated.data.message,
+            company_name: validated.data.companyName,
+            ide_situation: validated.data.ideSituation,
+            ide_number: validated.data.ideNumber || null,
+            expertise_domain: validated.data.professionalType || '',
+            address_pro: validated.data.addressPro,
+            canton: validated.data.canton,
+            professional_type: validated.data.professionalType,
+            request_object: validated.data.requestObject,
+            website: validated.data.website || null,
+            message: validated.data.message || null,
             status: 'PENDING'
         }])
 
     if (error) {
+        console.error('[submitVerification] DB Error:', error)
         if (error.code === '23505') return { error: "Une demande avec cet email existe déjà" }
         return { error: "Erreur lors de l'envoi de la demande" }
     }
 
-    // 2. Notify n8n (Background task to avoid blocking the user)
+    // 2. Send webhook to n8n with ALL fields
     const n8nWebhookUrl = "https://jorge2812.app.n8n.cloud/webhook/1c994d86-492b-407a-bca3-018303d13921"
 
-    // We don't await this to keep the UI fast, or we wrap it in a silent try/catch
     try {
         fetch(n8nWebhookUrl, {
             method: 'POST',
@@ -51,8 +54,16 @@ export async function submitVerification(data: VerificationRequestForm) {
                 event: 'registration_submitted',
                 fullName: validated.data.fullName,
                 email: validated.data.email,
+                phonePro: validated.data.phonePro,
                 companyName: validated.data.companyName,
+                professionalType: validated.data.professionalType,
+                ideSituation: validated.data.ideSituation,
+                ideNumber: validated.data.ideNumber || null,
                 addressPro: validated.data.addressPro,
+                canton: validated.data.canton,
+                website: validated.data.website || null,
+                requestObject: validated.data.requestObject,
+                message: validated.data.message || null,
                 submittedAt: new Date().toISOString()
             })
         }).catch(err => console.error("[n8n Webhook Error]:", err))
@@ -60,7 +71,7 @@ export async function submitVerification(data: VerificationRequestForm) {
         console.error("[n8n Trigger Error]:", e)
     }
 
-    return { success: true }
+    return { success: true, email: validated.data.email }
 }
 
 /**
@@ -104,8 +115,7 @@ export async function adminApproveUser(requestId: string, initialLevel: 'NONE' |
         })
         .eq('id', requestId)
 
-    // 5. Profile is created via Trigger (assuming trigger exists) or manual insert
-    // Let's do manual insert for robustness in this plan
+    // 5. Profile is created via Trigger or manual insert
     const { error: profileError } = await supabase
         .from('profiles')
         .insert([{
@@ -122,7 +132,6 @@ export async function adminApproveUser(requestId: string, initialLevel: 'NONE' |
     if (profileError) {
         console.error("Profile creation error:", profileError)
     }
-
 
     revalidatePath('/admin/verifications')
     return { success: true }

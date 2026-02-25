@@ -1,18 +1,20 @@
 ﻿import { z } from 'zod'
 
 export const VerificationRequestSchema = z.object({
-    fullName: z.string().min(3, "Nom complet requis"),
-    email: z.string().email("Email invalide"),
-    phonePersonal: z.string().optional(),
-    companyName: z.string().min(2, "Raison sociale requise"),
-    ideSituation: z.string().optional(),
-    phonePro: z.string().min(5, "Telephone professionnel requis"),
-    expertiseDomain: z.string().optional(),
-    website: z.string().url().optional().or(z.literal('')),
-    addressPro: z.string().optional(),
-    canton: z.string().min(1, "Canton / Region requis"),
-    professionalType: z.string().min(1, "Type de professionnel requis"),
-    requestObject: z.string().min(1, "Objet de la demande requis"),
+    fullName: z.string().min(3, "Ce champ est requis"),
+    email: z.string().email("Adresse email invalide"),
+    phonePro: z.string().min(5, "Ce champ est requis").refine(
+        (val) => val.startsWith('+41') || val.startsWith('0'),
+        "Le numéro doit commencer par +41 ou 0"
+    ),
+    companyName: z.string().min(2, "Ce champ est requis"),
+    professionalType: z.string().min(1, "Ce champ est requis"),
+    ideSituation: z.string().min(1, "Ce champ est requis"),
+    ideNumber: z.string().optional(),
+    addressPro: z.string().min(1, "Ce champ est requis"),
+    canton: z.string().min(1, "Ce champ est requis"),
+    website: z.string().url("URL invalide").optional().or(z.literal('')),
+    requestObject: z.string().min(1, "Ce champ est requis"),
     message: z.string().optional(),
 })
 
@@ -24,7 +26,7 @@ export const LoginSchema = z.object({
 })
 
 export const InviteSchema = z.object({
-    password: z.string().min(8, "Le mot de passe doit faire au moins 8 caracteres"),
+    password: z.string().min(8, "Le mot de passe doit faire au moins 8 caractères"),
     confirmPassword: z.string()
 }).refine((data) => data.password === data.confirmPassword, {
     message: "Les mots de passe ne correspondent pas",

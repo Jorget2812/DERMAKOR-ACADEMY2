@@ -34,7 +34,7 @@ export default async function DashboardPage() {
             <header className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-serif">Bienvenue, {profile?.full_name}</h1>
-                    <p className="text-muted-foreground mt-1">Votre espace professionnel Dermakor Academy.</p>
+                    <p className="text-muted-foreground mt-1">Votre espace professionnel DermaKor Swiss.</p>
                 </div>
                 <div className="flex items-center gap-3">
                     {isPremium ? (

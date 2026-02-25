@@ -127,7 +127,7 @@ export default async function CategoryShopPage({ params }: { params: Promise<{ s
                                         <CardContent className="p-6 flex-grow flex flex-col">
                                             <div className="space-y-3 mb-6">
                                                 <div className="flex items-center justify-between mb-1">
-                                                    <span className="text-[9px] font-bold text-primary/20 uppercase tracking-[0.2em]">Dermakor Academy</span>
+                                                    <span className="text-[9px] font-bold text-primary/20 uppercase tracking-[0.2em]">DermaKor Swiss</span>
                                                     {product.is_bestseller && (
                                                         <span className="text-[10px] font-bold text-[#C0A76A] uppercase tracking-[0.1em] font-oswald border border-[#C0A76A] px-2 py-0.5 rounded-[2px] bg-transparent">
                                                             Bestseller

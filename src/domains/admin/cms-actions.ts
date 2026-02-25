@@ -154,27 +154,36 @@ export async function upsertPageContent(
     fieldValue: string,
     locale: Locale = 'fr'
 ) {
-    const supabase = await createClient()
+    try {
+        // Auth check with user client
+        const userClient = await createClient()
+        const { data: { user } } = await userClient.auth.getUser()
+        if (!user) return { error: 'Non authentifié' }
+        const { data: isAdmin } = await userClient.rpc('is_admin')
+        if (!isAdmin) return { error: 'Accès refusé' }
 
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return { error: 'Non authentifié' }
+        // Use admin client to bypass RLS for the write
+        const supabase = createAdminClient()
+        const { error } = await (supabase as any)
+            .from('page_contents')
+            .upsert({
+                page_slug: pageSlug,
+                field_key: fieldKey,
+                field_value: fieldValue,
+                locale
+            }, { onConflict: 'page_slug,field_key,locale' })
 
-    const { data: isAdmin } = await supabase.rpc('is_admin')
-    if (!isAdmin) return { error: 'Accès refusé' }
+        if (error) {
+            console.error('[upsertPageContent] Supabase error:', error)
+            return { error: error.message }
+        }
 
-    const { error } = await (supabase as any)
-        .from('page_contents')
-        .upsert({
-            page_slug: pageSlug,
-            field_key: fieldKey,
-            field_value: fieldValue,
-            locale
-        }, { onConflict: 'page_slug,field_key,locale' })
-
-    if (error) return { error: (error as any).message }
-
-    revalidatePath(`/[locale]/(public)/${pageSlug === 'home' ? '' : pageSlug}`, 'page')
-    return { success: true }
+        revalidatePath(`/[locale]/(public)/${pageSlug === 'home' ? '' : pageSlug}`, 'page')
+        return { success: true }
+    } catch (err: any) {
+        console.error('[upsertPageContent] Unexpected error:', err)
+        return { error: err?.message ?? 'Erreur inattendue' }
+    }
 }
 
 /**
@@ -185,29 +194,56 @@ export async function upsertPageContents(
     fields: Record<string, string>,
     locale: Locale = 'fr'
 ) {
-    const supabase = await createClient()
+    try {
+        // Auth check with user client
+        const userClient = await createClient()
+        const { data: { user } } = await userClient.auth.getUser()
+        if (!user) {
+            console.error('[upsertPageContents] Not authenticated')
+            return { error: 'Non authentifié — veuillez vous reconnecter.' }
+        }
+        const { data: isAdmin, error: rpcError } = await userClient.rpc('is_admin')
+        if (rpcError) {
+            console.error('[upsertPageContents] RPC is_admin error:', rpcError)
+            return { error: `Vérification admin échouée: ${rpcError.message}` }
+        }
+        if (!isAdmin) return { error: 'Accès refusé — droits admin requis.' }
 
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return { error: 'Non authentifié' }
+        // Use admin client to bypass RLS for the write
+        const adminClient = createAdminClient()
 
-    const { data: isAdmin } = await supabase.rpc('is_admin')
-    if (!isAdmin) return { error: 'Accès refusé' }
+        // Build rows, skipping null/undefined values
+        const rows = Object.entries(fields)
+            .filter(([, v]) => v !== undefined && v !== null)
+            .map(([field_key, field_value]) => ({
+                page_slug: pageSlug,
+                field_key,
+                field_value: String(field_value),
+                locale,
+            }))
 
-    const rows = Object.entries(fields).map(([field_key, field_value]) => ({
-        page_slug: pageSlug,
-        field_key,
-        field_value: field_value ?? '',
-        locale
-    }))
+        if (rows.length === 0) return { success: true }
 
-    const { error } = await (supabase as any)
-        .from('page_contents')
-        .upsert(rows, { onConflict: 'page_slug,field_key,locale' })
+        // Batch in chunks of 25 to avoid payload limits
+        const CHUNK_SIZE = 25
+        for (let i = 0; i < rows.length; i += CHUNK_SIZE) {
+            const chunk = rows.slice(i, i + CHUNK_SIZE)
+            const { error } = await (adminClient as any)
+                .from('page_contents')
+                .upsert(chunk, { onConflict: 'page_slug,field_key,locale' })
 
-    if (error) return { error: (error as any).message }
+            if (error) {
+                console.error(`[upsertPageContents] Batch ${i}-${i + CHUNK_SIZE} error:`, error)
+                return { error: `Erreur Supabase: ${error.message} (code: ${error.code})` }
+            }
+        }
 
-    revalidatePath(`/`, 'layout')
-    return { success: true }
+        revalidatePath('/', 'layout')
+        return { success: true }
+    } catch (err: any) {
+        console.error('[upsertPageContents] Unexpected error:', err)
+        return { error: `Erreur inattendue: ${err?.message ?? String(err)}` }
+    }
 }
 
 /**

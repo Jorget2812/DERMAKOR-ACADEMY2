@@ -44,6 +44,46 @@ const EDITABLE_PAGES = [
         bg: 'bg-purple-50',
         fields: 2
     },
+    {
+        slug: 'faq',
+        title: 'FAQ',
+        description: 'Questions et réponses de la foire aux questions.',
+        href: '/faq',
+        icon: ChevronRight,
+        color: 'text-orange-600',
+        bg: 'bg-orange-50',
+        fields: 22
+    },
+    {
+        slug: 'cgv',
+        title: 'CGV',
+        description: 'Conditions Générales de Vente (Rich Text).',
+        href: '/cgv',
+        icon: ChevronRight,
+        color: 'text-slate-600',
+        bg: 'bg-slate-50',
+        fields: 1
+    },
+    {
+        slug: 'privacy',
+        title: 'Confidentialité',
+        description: 'Politique de confidentialité (Rich Text).',
+        href: '/confidentialite',
+        icon: ChevronRight,
+        color: 'text-slate-600',
+        bg: 'bg-slate-50',
+        fields: 1
+    },
+    {
+        slug: 'contact',
+        title: 'Contact',
+        description: 'Titres et informations de la page contact.',
+        href: '/contact',
+        icon: ChevronRight,
+        color: 'text-rose-600',
+        bg: 'bg-rose-50',
+        fields: 6
+    },
 ]
 
 export default function PagesHubPage() {

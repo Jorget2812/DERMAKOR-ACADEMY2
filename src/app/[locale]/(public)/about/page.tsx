@@ -5,7 +5,7 @@ import { getPageContents } from '@/domains/admin/cms-actions'
 
 const DEFAULTS = {
     page_title: "L'Excellence à la Source",
-    page_subtitle: "DERMAKOR ACADEMY est le partenaire privilégié des professionnels de la dermo-esthétique en Suisse.",
+    page_subtitle: "DERMAKOR SWISS est le partenaire privilégié des professionnels de la dermo-esthétique en Suisse.",
     mission_title: "Notre Mission",
     mission_text1: "Née d'une volonté de standardiser l'excellence dans les soins esthétiques avancés, notre académie offre bien plus que des produits. Nous fournissons un écosystème complet : des formulations de pointe alliées à une éducation rigoureuse.",
     mission_text2: "Basés en Suisse, nous nous engageons à respecter les standards de qualité les plus élevés, garantissant à nos partenaires des résultats exceptionnels et une sécurité totale.",

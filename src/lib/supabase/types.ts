@@ -794,16 +794,20 @@ export type Database = {
         Row: {
           address_pro: string
           admin_notes: string | null
+          canton: string | null
           company_name: string
           created_at: string | null
           email: string
           expertise_domain: string
           full_name: string
           id: string
+          ide_number: string | null
           ide_situation: string
           message: string | null
           phone_personal: string | null
           phone_pro: string
+          professional_type: string | null
+          request_object: string | null
           reviewed_at: string | null
           reviewed_by: string | null
           status: Database["public"]["Enums"]["verification_status"] | null
@@ -812,16 +816,20 @@ export type Database = {
         Insert: {
           address_pro: string
           admin_notes?: string | null
+          canton?: string | null
           company_name: string
           created_at?: string | null
           email: string
           expertise_domain: string
           full_name: string
           id?: string
+          ide_number?: string | null
           ide_situation: string
           message?: string | null
           phone_personal?: string | null
           phone_pro: string
+          professional_type?: string | null
+          request_object?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           status?: Database["public"]["Enums"]["verification_status"] | null
@@ -830,16 +838,20 @@ export type Database = {
         Update: {
           address_pro?: string
           admin_notes?: string | null
+          canton?: string | null
           company_name?: string
           created_at?: string | null
           email?: string
           expertise_domain?: string
           full_name?: string
           id?: string
+          ide_number?: string | null
           ide_situation?: string
           message?: string | null
           phone_personal?: string | null
           phone_pro?: string
+          professional_type?: string | null
+          request_object?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           status?: Database["public"]["Enums"]["verification_status"] | null

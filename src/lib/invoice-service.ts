@@ -40,7 +40,7 @@ export async function generateAndUploadInvoice(orderId: string) {
     // Generate PDF
 
     // Determine Company Info (Prioritize DB Settings)
-    const companyName = iSettings?.company_name || "DERMAKOR ACADEMY"
+    const companyName = iSettings?.company_name || "DERMAKOR SWISS"
     const companyAddress = iSettings?.company_address || ""
     const companyCity = iSettings?.company_city || ""
     const companyZip = iSettings?.company_zip || ""

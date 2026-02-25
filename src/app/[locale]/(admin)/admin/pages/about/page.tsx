@@ -6,7 +6,7 @@ import { ArrowLeft, ExternalLink } from 'lucide-react'
 
 const PAGE_DEFAULTS: Record<string, string> = {
     page_title: "L'Excellence à la Source",
-    page_subtitle: "DERMAKOR ACADEMY est le partenaire privilégié des professionnels de la dermo-esthétique en Suisse.",
+    page_subtitle: "DERMAKOR SWISS est le partenaire privilégié des professionnels de la dermo-esthétique en Suisse.",
     mission_title: "Notre Mission",
     mission_text1: "Née d'une volonté de standardiser l'excellence dans les soins esthétiques avancés, notre académie offre bien plus que des produits.",
     mission_text2: "Basés en Suisse, nous nous engageons à respecter les standards de qualité les plus élevés.",

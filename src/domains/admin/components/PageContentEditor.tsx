@@ -21,8 +21,9 @@ export interface PageContentEditorProps {
     pageName: string
     sections: {
         title: string
+        description?: string
         icon?: string
-        fields: PageField[]
+        fields?: PageField[]
     }[]
     currentContent: Record<string, string>
     defaultContent: Record<string, string>
@@ -39,7 +40,7 @@ export function PageContentEditor({
     const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle')
     const [values, setValues] = useState<Record<string, string>>(() => {
         const merged: Record<string, string> = {}
-        sections.flatMap(s => s.fields).forEach(f => {
+        sections.flatMap(s => s.fields || []).forEach(f => {
             merged[f.key] = currentContent[f.key] ?? ''
         })
         return merged
@@ -76,12 +77,19 @@ export function PageContentEditor({
 
             {sections.map((section, sIdx) => (
                 <div key={sIdx} className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-                    <div className="bg-slate-50/50 border-b border-slate-100 px-8 py-5 flex items-center gap-3">
-                        {section.icon && <span className="text-xl">{section.icon}</span>}
-                        <h2 className="text-sm font-bold uppercase tracking-widest text-slate-700">{section.title}</h2>
+                    <div className="bg-slate-50/50 border-b border-slate-100 px-8 py-5 flex flex-col gap-1">
+                        <div className="flex items-center gap-3">
+                            {section.icon && <span className="text-xl">{section.icon}</span>}
+                            <h2 className="text-sm font-bold uppercase tracking-widest text-slate-700">{section.title}</h2>
+                        </div>
+                        {section.description && (
+                            <p className="text-xs text-muted-foreground font-light leading-relaxed">
+                                {section.description}
+                            </p>
+                        )}
                     </div>
                     <div className="p-8 space-y-6">
-                        {section.fields.map((field) => {
+                        {section.fields?.map((field) => {
                             const placeholder = field.placeholder || defaultContent[field.key] || ''
                             return (
                                 <div key={field.key} className="space-y-2">
