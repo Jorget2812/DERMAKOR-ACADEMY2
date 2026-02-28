@@ -1,9 +1,20 @@
 import { Link } from '@/navigation'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { ChevronRight, Home, Info, GraduationCap, ShoppingBag, ExternalLink } from 'lucide-react'
+import { ChevronRight, Home, Info, GraduationCap, ShoppingBag, ExternalLink, Layout } from 'lucide-react'
 
 const EDITABLE_PAGES = [
+    {
+        slug: 'navigation',
+        title: 'Navigation & En-tête',
+        description: 'Menu principal, logo, couleurs du header et options d\'affichage.',
+        href: '/',
+        icon: Layout,
+        color: 'text-slate-900',
+        bg: 'bg-slate-100',
+        fields: 'CMS Global',
+        customHref: '/admin/navigation'
+    },
     {
         slug: 'home',
         title: 'Page d\'Accueil',
@@ -25,14 +36,15 @@ const EDITABLE_PAGES = [
         fields: 4
     },
     {
-        slug: 'academy-info',
+        slug: 'formations',
         title: 'Nos Formations',
-        description: 'Titres de l\'académie, descriptions des modules, CTA d\'inscription.',
+        description: 'Éditez tout le contenu du catalogue de formations : Hero, programmes, formateurs, prix et avis.',
         href: '/academy-info',
         icon: GraduationCap,
         color: 'text-emerald-600',
         bg: 'bg-emerald-50',
-        fields: 6
+        fields: 85,
+        customHref: '/admin/pages/formations'
     },
     {
         slug: 'shop',
@@ -140,7 +152,7 @@ export default function PagesHubPage() {
                         </CardHeader>
                         <CardContent className="p-8 flex items-center justify-between">
                             <p className="text-sm text-muted-foreground font-light leading-relaxed max-w-xs">{page.description}</p>
-                            <Link href={`/admin/pages/${page.slug}`}>
+                            <Link href={page.customHref || `/admin/pages/${page.slug}`}>
                                 <Button className="bg-slate-900 hover:bg-black rounded-xl h-10 px-6 text-[10px] font-bold uppercase tracking-widest gap-2 group/btn">
                                     Éditer
                                     <ChevronRight size={14} className="group-hover/btn:translate-x-0.5 transition-transform" />

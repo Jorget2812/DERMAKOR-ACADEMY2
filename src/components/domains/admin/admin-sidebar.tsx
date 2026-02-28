@@ -44,10 +44,11 @@ const adminNavItems = [
         href: '/admin/pages',
         icon: FileText,
         subItems: [
+            { name: 'Navigation & Header', href: '/admin/navigation' },
             { name: 'Toutes les pages', href: '/admin/pages' },
             { name: 'Page d\'Accueil', href: '/admin/pages/home' },
             { name: 'À Propos', href: '/admin/pages/about' },
-            { name: 'Nos Formations', href: '/admin/pages/academy-info' },
+            { name: 'Nos Formations', href: '/admin/pages/formations' },
             { name: 'La Boutique', href: '/admin/pages/shop' },
         ]
     },

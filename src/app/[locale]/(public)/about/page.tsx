@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button"
 import { Link } from '@/navigation'
 import { ShieldCheck, Star, Users } from 'lucide-react'
 import { getPageContents } from '@/domains/admin/cms-actions'
+import { CmsImage } from '@/components/CmsImage'
 
 const DEFAULTS = {
     page_title: "L'Excellence à la Source",
@@ -59,10 +60,12 @@ export default async function AboutPage() {
                             </div>
                         </div>
                         <div className="relative aspect-square rounded-[2rem] overflow-hidden shadow-2xl gold-glow border-8 border-white">
-                            <img
-                                src="https://images.unsplash.com/photo-1579154341098-e4e158cc7f55?auto=format&fit=crop&q=80&w=1000"
+                            <CmsImage
+                                src={c('about_image')}
                                 alt="Laboratory Quality"
-                                className="w-full h-full object-cover"
+                                fill
+                                className="object-cover"
+                                fallbackText="About Us Image"
                             />
                         </div>
                     </div>

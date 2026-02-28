@@ -22,6 +22,7 @@ const PAGE_DEFAULTS: Record<string, string> = {
     value3_desc: "Rejoignez un réseau de professionnels passionnés par l'innovation esthétique.",
     cta_title: "Prêt à transformer votre pratique ?",
     cta_button: "Rejoindre l'Académie",
+    about_image: "https://images.unsplash.com/photo-1579154341098-e4e158cc7f55?auto=format&fit=crop&q=80&w=1000",
 }
 
 export default async function AboutPageEditor() {
@@ -67,6 +68,7 @@ export default async function AboutPageEditor() {
                             { key: 'mission_title', label: 'Titre Colonne Gauche', type: 'text', placeholder: PAGE_DEFAULTS.mission_title },
                             { key: 'mission_text1', label: 'Paragraphe 1', type: 'textarea', placeholder: PAGE_DEFAULTS.mission_text1 },
                             { key: 'mission_text2', label: 'Paragraphe 2', type: 'textarea', placeholder: PAGE_DEFAULTS.mission_text2 },
+                            { key: 'about_image', label: 'Image Illustration', type: 'image', placeholder: PAGE_DEFAULTS.about_image },
                         ]
                     },
                     {

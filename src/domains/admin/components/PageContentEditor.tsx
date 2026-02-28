@@ -6,13 +6,18 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { Save, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react'
+import { Save, CheckCircle2, AlertCircle, Loader2, Upload, ImageIcon, Settings2, ChevronRight } from 'lucide-react'
+import { useRef } from 'react'
+import { getSignedUploadUrl } from '../academy-actions'
+import { toast } from 'sonner'
+import { Switch } from '@/components/ui/switch'
 
 export interface PageField {
     key: string
     label: string
+    hint?: string
     description?: string
-    type: 'text' | 'textarea'
+    type: 'text' | 'textarea' | 'image'
     placeholder?: string
 }
 
@@ -97,26 +102,31 @@ export function PageContentEditor({
                                         <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
                                             {field.label}
                                         </Label>
-                                        {values[field.key] && (
-                                            <button
-                                                type="button"
-                                                onClick={() => handleChange(field.key, '')}
-                                                className="text-[10px] text-muted-foreground hover:text-destructive transition-colors"
-                                            >
-                                                Réinitialiser
-                                            </button>
-                                        )}
                                     </div>
+                                    {field.hint && (
+                                        <p className="text-xs text-gray-400 mt-0.5 mb-1 italic">
+                                            → {field.hint}
+                                        </p>
+                                    )}
                                     {field.type === 'textarea' ? (
                                         <Textarea
-                                            value={values[field.key]}
+                                            value={values[field.key] || ''}
                                             onChange={e => handleChange(field.key, e.target.value)}
                                             placeholder={placeholder}
                                             className="rounded-xl min-h-[100px] text-sm resize-none"
                                         />
+                                    ) : field.type === 'image' ? (
+                                        <UploadField
+                                            label={field.label}
+                                            k={field.key}
+                                            val={values[field.key] || ''}
+                                            onChange={handleChange}
+                                            values={values}
+                                            hasOverlay
+                                        />
                                     ) : (
                                         <Input
-                                            value={values[field.key]}
+                                            value={values[field.key] || ''}
                                             onChange={e => handleChange(field.key, e.target.value)}
                                             placeholder={placeholder}
                                             className="h-11 rounded-xl text-sm"
@@ -146,6 +156,143 @@ export function PageContentEditor({
                     )}
                 </Button>
             </div>
+        </div>
+    )
+}
+
+function UploadField({ label, k, val, onChange, bucket = 'academy-pdfs', hasOverlay, values, hint }: any) {
+    const [uploading, setUploading] = useState(false)
+    const [showOverlay, setShowOverlay] = useState(false)
+    const fileRef = useRef<HTMLInputElement>(null)
+
+    const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (!file) return
+
+        setUploading(true)
+        try {
+            const ext = file.name.split('.').pop()
+            const path = `cms/${Date.now()}.${ext}`
+            const { signedUrl } = await getSignedUploadUrl(bucket as any, path)
+
+            const res = await fetch(signedUrl, {
+                method: 'PUT',
+                body: file,
+                headers: { 'Content-Type': file.type }
+            })
+
+            if (!res.ok) throw new Error('Upload échoué')
+
+            onChange(k, path)
+            toast.success("Image téléversée")
+        } catch (err: any) {
+            toast.error(err.message)
+        } finally {
+            setUploading(false)
+        }
+    }
+
+    return (
+        <div className="space-y-4">
+            <div className="space-y-2">
+                <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">{label}</Label>
+                {hint && (
+                    <p className="text-xs text-gray-400 mt-0.5 mb-1 italic">
+                        → {hint}
+                    </p>
+                )}
+                <div className="flex gap-2">
+                    <Input
+                        value={val || ''}
+                        onChange={e => onChange(k, e.target.value)}
+                        placeholder="URL ou chemin..."
+                        className="h-11 rounded-xl border-slate-200 flex-grow"
+                    />
+                    <Button
+                        type="button"
+                        variant="outline"
+                        disabled={uploading}
+                        onClick={() => fileRef.current?.click()}
+                        className="h-11 w-11 p-0 rounded-xl border-slate-200 hover:border-accent hover:text-accent"
+                    >
+                        {uploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
+                    </Button>
+                    <input ref={fileRef} type="file" className="hidden" accept="image/*" onChange={handleUpload} />
+                </div>
+            </div>
+
+            {hasOverlay && (
+                <div className="ml-4 border-l-2 border-slate-100 pl-4 space-y-4">
+                    <button
+                        type="button"
+                        onClick={() => setShowOverlay(!showOverlay)}
+                        className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[2px] text-slate-400 hover:text-accent transition-colors"
+                    >
+                        <Settings2 size={14} className={showOverlay ? 'text-accent' : ''} />
+                        Overlay texte (optionnel)
+                        <ChevronRight size={12} className={`transition-transform ${showOverlay ? 'rotate-90' : ''}`} />
+                    </button>
+
+                    {showOverlay && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-1">
+                            <Field label="Titre Overlay" k={`${k}_overlay_title`} val={values[`${k}_overlay_title`]} onChange={onChange} hint="Titre affiché par-dessus l'image" />
+                            <Field label="Sous-titre Overlay" k={`${k}_overlay_subtitle`} val={values[`${k}_overlay_subtitle`]} onChange={onChange} hint="Sous-titre plus petit sous l'overlay principal" />
+                            <Field label="Texte Bouton CTA" k={`${k}_overlay_cta_text`} val={values[`${k}_overlay_cta_text`]} onChange={onChange} hint="Texte du bouton sur l'image" />
+                            <Field label="Lien Bouton CTA" k={`${k}_overlay_cta_link`} val={values[`${k}_overlay_cta_link`]} onChange={onChange} hint="URL de destination du bouton (ex: /pro)" />
+                            <div className="space-y-2">
+                                <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Position</Label>
+                                <p className="text-xs text-gray-400 mt-0.5 mb-1 italic">→ Position du bloc texte sur l'image</p>
+                                <select
+                                    className="w-full h-12 rounded-xl border-slate-200 bg-white px-3 text-sm focus:border-accent outline-none"
+                                    value={values[`${k}_overlay_position`] || 'bottom-left'}
+                                    onChange={e => onChange(`${k}_overlay_position`, e.target.value)}
+                                >
+                                    <option value="center">Centre</option>
+                                    <option value="bottom-left">Bas-Gauche</option>
+                                    <option value="bottom-center">Bas-Centre</option>
+                                    <option value="top-left">Haut-Gauche</option>
+                                    <option value="top-right">Haut-Droite</option>
+                                </select>
+                            </div>
+                            <div className="flex items-center gap-4 bg-slate-50 px-4 py-2 rounded-xl border border-slate-100 self-end h-12">
+                                <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Overlay Sombre</Label>
+                                <Switch
+                                    checked={values[`${k}_overlay_dark`] === '1'}
+                                    onCheckedChange={checked => onChange(`${k}_overlay_dark`, checked ? '1' : '0')}
+                                />
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
+        </div>
+    )
+}
+
+function Field({ label, k, val, onChange, type = 'text', placeholder, hint }: any) {
+    return (
+        <div className="space-y-2">
+            <Label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">{label}</Label>
+            {hint && (
+                <p className="text-xs text-gray-400 mt-0.5 mb-1 italic">
+                    → {hint}
+                </p>
+            )}
+            {type === 'textarea' ? (
+                <Textarea
+                    value={val || ''}
+                    onChange={e => onChange(k, e.target.value)}
+                    placeholder={placeholder}
+                    className="min-h-[100px] rounded-xl border-slate-200 focus:border-accent"
+                />
+            ) : (
+                <Input
+                    value={val || ''}
+                    onChange={e => onChange(k, e.target.value)}
+                    placeholder={placeholder}
+                    className="h-12 rounded-xl border-slate-200 focus:border-accent"
+                />
+            )}
         </div>
     )
 }

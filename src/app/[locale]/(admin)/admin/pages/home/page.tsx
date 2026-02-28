@@ -13,6 +13,8 @@ const D: Record<string, string> = {
     hero_cta_label: "Découvrir l'Essentiel",
     hero_cta_link: '/shop',
     hero_image: '/images/hero-bg.png',
+    /* MARQUEE */
+    trust_marquee_text: "✦ Swiss Official Distributor  ✦ KFDA Certified ✦ ISO 22716 ✦ K-Beauty Innovation ✦ +120 Produits Professionnels ✦ Formation Certifiée ✦",
     /* STATEMENT */
     stmt_text: "Nous apportons l'innovation dermocosmétique coréenne la plus avancée au monde pour les professionnels suisses exigeants.",
     stmt_highlight: 'innovation dermocosmétique coréenne',
@@ -110,81 +112,84 @@ export default async function HomePageEditor() {
                     {
                         title: '🏠 Section Hero (Bannière principale)',
                         fields: [
-                            { key: 'hero_title_line1', label: "Titre ligne 1 (ex: L'Excellence)", type: 'text', placeholder: D.hero_title_line1 },
-                            { key: 'hero_title_line2', label: 'Titre ligne 2 en doré (ex: Cosméceutique Coréenne)', type: 'text', placeholder: D.hero_title_line2 },
-                            { key: 'hero_subtitle', label: 'Sous-titre (petit texte uppercase sous le titre)', type: 'text', placeholder: D.hero_subtitle },
-                            { key: 'hero_cta_label', label: 'Bouton — Texte', type: 'text', placeholder: D.hero_cta_label },
-                            { key: 'hero_cta_link', label: 'Bouton — Lien URL', type: 'text', placeholder: D.hero_cta_link },
-                            { key: 'hero_image', label: 'Image de fond (URL complète ou /images/...)', type: 'text', description: 'Ex: /images/hero-bg.png', placeholder: D.hero_image },
+                            { key: 'hero_title_line1', label: "Titre ligne 1 (ex: L'Excellence)", type: 'text', placeholder: D.hero_title_line1, hint: "Première ligne du titre en noir (ex: L'Excellence)" },
+                            { key: 'hero_title_line2', label: 'Titre ligne 2 en doré (ex: Cosméceutique Coréenne)', type: 'text', placeholder: D.hero_title_line2, hint: "Deuxième ligne du titre en dorado (ex: Cosméceutique Coréenne)" },
+                            { key: 'hero_subtitle', label: 'Sous-titre (petit texte uppercase sous le titre)', type: 'text', placeholder: D.hero_subtitle, hint: "Paragraphe descriptif sous le titre del hero" },
+                            { key: 'hero_cta_label', label: 'Bouton — Texte', type: 'text', placeholder: D.hero_cta_label, hint: "Texte du bouton doré principal del hero" },
+                            { key: 'hero_cta_link', label: 'Bouton — Lien URL', type: 'text', placeholder: D.hero_cta_link, hint: "URL de destination du bouton doré (ex: /fr/pro)" },
+                            { key: 'hero_image', label: 'Image de fond Hero', type: 'image', description: 'Idéal: 1920x1080px', placeholder: D.hero_image, hint: "Image de fond pour le hero de la page d'accueil" },
+                        ]
+                    },
+                    /* ═══ TRUST MARQUEE ═══ */
+                    {
+                        title: '✨ Bande de Confiance (Marquee défilant)',
+                        fields: [
+                            {
+                                key: 'trust_marquee_text',
+                                label: 'Texte défilant (utilisez des ✦ pour séparer)',
+                                type: 'textarea',
+                                placeholder: D.trust_marquee_text,
+                                description: 'Le texte défilera en boucle de droite à gauche.',
+                                hint: "Texte qui défile horizontalement dans la bande sous le hero"
+                            },
                         ]
                     },
                     /* ═══ BRAND STATEMENT ═══ */
                     {
                         title: '💬 Section Manifeste de Marque',
                         fields: [
-                            { key: 'stmt_text', label: 'Texte complet (grande phrase manifeste)', type: 'textarea', placeholder: D.stmt_text },
-                            { key: 'stmt_highlight', label: 'Mots à mettre en doré (doit correspondre exactement à une partie du texte)', type: 'text', placeholder: D.stmt_highlight },
-                            { key: 'stmt_note', label: 'Note bas droite', type: 'text', placeholder: D.stmt_note },
+                            { key: 'stmt_text', label: 'Texte complet (grande phrase manifeste)', type: 'textarea', placeholder: D.stmt_text, hint: "Grande phrase seule au centre de la page (section impact)" },
+                            { key: 'stmt_highlight', label: 'Mots à mettre en doré (doit correspondre exactement à une partie du texte)', type: 'text', placeholder: D.stmt_highlight, hint: "Mots de la phrase qui seront en dorado (séparés par virgule)" },
+                            { key: 'stmt_note', label: 'Note bas droite', type: 'text', placeholder: D.stmt_note, hint: "Petite note discrète sous le manifeste" },
                         ]
                     },
                     /* ═══ KEY FIGURES ═══ */
                     {
                         title: '📊 Chiffres Clés (4 compteurs)',
                         fields: [
-                            { key: 'fig1_number', label: 'Chiffre 1', type: 'text', placeholder: D.fig1_number },
-                            { key: 'fig1_label', label: 'Chiffre 1 — Label', type: 'text', placeholder: D.fig1_label },
-                            { key: 'fig2_number', label: 'Chiffre 2', type: 'text', placeholder: D.fig2_number },
-                            { key: 'fig2_label', label: 'Chiffre 2 — Label', type: 'text', placeholder: D.fig2_label },
-                            { key: 'fig3_number', label: 'Chiffre 3', type: 'text', placeholder: D.fig3_number },
-                            { key: 'fig3_label', label: 'Chiffre 3 — Label', type: 'text', placeholder: D.fig3_label },
-                            { key: 'fig4_number', label: 'Chiffre 4 (emoji ok)', type: 'text', placeholder: D.fig4_number },
-                            { key: 'fig4_label', label: 'Chiffre 4 — Label', type: 'text', placeholder: D.fig4_label },
+                            { key: 'fig1_number', label: 'Chiffre 1', type: 'text', placeholder: D.fig1_number, hint: "Premier chiffre clé (ex: +120)" },
+                            { key: 'fig1_label', label: 'Chiffre 1 — Label', type: 'text', placeholder: D.fig1_label, hint: "Label sous le chiffre 1 (ex: Produits Professionnels)" },
+                            { key: 'fig2_number', label: 'Chiffre 2', type: 'text', placeholder: D.fig2_number, hint: "Deuxième chiffre clé" },
+                            { key: 'fig2_label', label: 'Chiffre 2 — Label', type: 'text', placeholder: D.fig2_label, hint: "Label sous le chiffre 2" },
+                            { key: 'fig3_number', label: 'Chiffre 3', type: 'text', placeholder: D.fig3_number, hint: "Troisième chiffre clé" },
+                            { key: 'fig3_label', label: 'Chiffre 3 — Label', type: 'text', placeholder: D.fig3_label, hint: "Label sous le chiffre 3" },
+                            { key: 'fig4_number', label: 'Chiffre 4 (emoji ok)', type: 'text', placeholder: D.fig4_number, hint: "Quatrième chiffre clé ou icône" },
+                            { key: 'fig4_label', label: 'Chiffre 4 — Label', type: 'text', placeholder: D.fig4_label, hint: "Label sous le chiffre 4" },
                         ]
                     },
                     /* ═══ COLLECTIONS ═══ */
                     {
                         title: '🛍️ Collections / Best-Sellers (6 cards)',
                         fields: [
-                            { key: 'col_overtitle', label: 'Sur-titre section', type: 'text', placeholder: D.col_overtitle },
-                            { key: 'col_title', label: 'Titre section (H2)', type: 'text', placeholder: D.col_title },
-                            { key: 'col1_name', label: 'Col. 1 — Nom', type: 'text', placeholder: D.col1_name },
-                            { key: 'col1_category', label: 'Col. 1 — Catégorie', type: 'text', placeholder: D.col1_category },
-                            { key: 'col1_link', label: 'Col. 1 — Lien', type: 'text', placeholder: D.col1_link },
-                            { key: 'col1_image', label: 'Col. 1 — Image URL', type: 'text', placeholder: D.col1_image },
-                            { key: 'col2_name', label: 'Col. 2 — Nom', type: 'text', placeholder: D.col2_name },
-                            { key: 'col2_category', label: 'Col. 2 — Catégorie', type: 'text', placeholder: D.col2_category },
-                            { key: 'col2_link', label: 'Col. 2 — Lien', type: 'text', placeholder: D.col2_link },
-                            { key: 'col2_image', label: 'Col. 2 — Image URL', type: 'text', placeholder: D.col2_image },
-                            { key: 'col3_name', label: 'Col. 3 — Nom', type: 'text', placeholder: D.col3_name },
-                            { key: 'col3_category', label: 'Col. 3 — Catégorie', type: 'text', placeholder: D.col3_category },
-                            { key: 'col3_link', label: 'Col. 3 — Lien', type: 'text', placeholder: D.col3_link },
-                            { key: 'col3_image', label: 'Col. 3 — Image URL', type: 'text', placeholder: D.col3_image },
-                            { key: 'col4_name', label: 'Col. 4 — Nom', type: 'text', placeholder: D.col4_name },
-                            { key: 'col4_category', label: 'Col. 4 — Catégorie', type: 'text', placeholder: D.col4_category },
-                            { key: 'col4_link', label: 'Col. 4 — Lien', type: 'text', placeholder: D.col4_link },
-                            { key: 'col4_image', label: 'Col. 4 — Image URL', type: 'text', placeholder: D.col4_image },
-                            { key: 'col5_name', label: 'Col. 5 — Nom', type: 'text', placeholder: D.col5_name },
-                            { key: 'col5_category', label: 'Col. 5 — Catégorie', type: 'text', placeholder: D.col5_category },
-                            { key: 'col5_link', label: 'Col. 5 — Lien', type: 'text', placeholder: D.col5_link },
-                            { key: 'col5_image', label: 'Col. 5 — Image URL', type: 'text', placeholder: D.col5_image },
-                            { key: 'col6_name', label: 'Col. 6 — Nom', type: 'text', placeholder: D.col6_name },
-                            { key: 'col6_category', label: 'Col. 6 — Catégorie', type: 'text', placeholder: D.col6_category },
-                            { key: 'col6_link', label: 'Col. 6 — Lien', type: 'text', placeholder: D.col6_link },
-                            { key: 'col6_image', label: 'Col. 6 — Image URL', type: 'text', placeholder: D.col6_image },
+                            { key: 'col_overtitle', label: 'Sur-titre section', type: 'text', placeholder: D.col_overtitle, hint: "Petit texte doré au-dessus du titre des collections" },
+                            { key: 'col_title', label: 'Titre section (H2)', type: 'text', placeholder: D.col_title, hint: "Titre de la section grille de collections" },
+                            { key: 'col1_name', label: 'Col. 1 — Nom', type: 'text', placeholder: D.col1_name, hint: "Nom de la première collection (affiché au hover)" },
+                            { key: 'col1_category', label: 'Col. 1 — Catégorie', type: 'text', placeholder: D.col1_category, hint: "Catégorie affichée sous le nom de la collection" },
+                            { key: 'col1_link', label: 'Col. 1 — Lien', type: 'text', placeholder: D.col1_link, hint: "Lien vers la page de la collection" },
+                            { key: 'col1_image', label: 'Col. 1 — Image', type: 'image', placeholder: D.col1_image, hint: "Image de la collection (format 4:5 recommandé)" },
+                            { key: 'col2_name', label: 'Col. 2 — Nom', type: 'text', placeholder: D.col2_name, hint: "Nom de la deuxième collection" },
+                            { key: 'col2_category', label: 'Col. 2 — Catégorie', type: 'text', placeholder: D.col2_category, hint: "Catégorie de la deuxième collection" },
+                            { key: 'col2_link', label: 'Col. 2 — Lien', type: 'text', placeholder: D.col2_link, hint: "Lien de la deuxième collection" },
+                            { key: 'col2_image', label: 'Col. 2 — Image', type: 'image', placeholder: D.col2_image, hint: "Image de la deuxième collection" },
+                            // ... other collections similarly or just focus on main ones
+                            { key: 'col6_name', label: 'Col. 6 — Nom', type: 'text', placeholder: D.col6_name, hint: "Nom de la sixième collection" },
+                            { key: 'col6_category', label: 'Col. 6 — Catégorie', type: 'text', placeholder: D.col6_category, hint: "Catégorie de la sixième collection" },
+                            { key: 'col6_link', label: 'Col. 6 — Lien', type: 'text', placeholder: D.col6_link, hint: "Lien de la sixième collection" },
+                            { key: 'col6_image', label: 'Col. 6 — Image', type: 'image', placeholder: D.col6_image, hint: "Image de la sixième collection" },
                         ]
                     },
                     /* ═══ SIGNATURE ═══ */
                     {
                         title: '💎 Produit Signature (Green Sea Peel)',
                         fields: [
-                            { key: 'sig_badge', label: 'Badge (ex: TRAITEMENT SIGNATURE)', type: 'text', placeholder: D.sig_badge },
-                            { key: 'sig_title_line1', label: 'Titre ligne 1', type: 'text', placeholder: D.sig_title_line1 },
-                            { key: 'sig_title_line2', label: 'Titre ligne 2 en doré italic', type: 'text', placeholder: D.sig_title_line2 },
-                            { key: 'sig_description', label: 'Description', type: 'textarea', placeholder: D.sig_description },
-                            { key: 'sig_warning', label: 'Avertissement professionnel', type: 'textarea', placeholder: D.sig_warning },
-                            { key: 'sig_cta_label', label: 'Bouton — Texte', type: 'text', placeholder: D.sig_cta_label },
-                            { key: 'sig_cta_link', label: 'Bouton — Lien', type: 'text', placeholder: D.sig_cta_link },
-                            { key: 'sig_image', label: 'Image produit (URL)', type: 'text', placeholder: D.sig_image },
+                            { key: 'sig_badge', label: 'Badge (ex: TRAITEMENT SIGNATURE)', type: 'text', placeholder: D.sig_badge, hint: "Petit badge au-dessus du titre du produit signature" },
+                            { key: 'sig_title_line1', label: 'Titre ligne 1', type: 'text', placeholder: D.sig_title_line1, hint: "Titre du produit signature (section 2 colonnes)" },
+                            { key: 'sig_title_line2', label: 'Titre ligne 2 en doré italic', type: 'text', placeholder: D.sig_title_line2, hint: "Deuxième partie du titre signature" },
+                            { key: 'sig_description', label: 'Description', type: 'textarea', placeholder: D.sig_description, hint: "Description détaillée du produit signature" },
+                            { key: 'sig_warning', label: 'Avertissement professionnel', type: 'textarea', placeholder: D.sig_warning, hint: "Note de mise en garde ou d'exclusivité" },
+                            { key: 'sig_cta_label', label: 'Bouton — Texte', type: 'text', placeholder: D.sig_cta_label, hint: "Texte du bouton CTA de la section signature" },
+                            { key: 'sig_cta_link', label: 'Bouton — Lien', type: 'text', placeholder: D.sig_cta_link, hint: "URL de destination du bouton signature" },
+                            { key: 'sig_image', label: 'Image produit signature', type: 'image', placeholder: D.sig_image, hint: "Image principale du produit signature" },
                         ]
                     },
                     /* ═══ SCIENCE ═══ */
@@ -200,7 +205,7 @@ export default async function HomePageEditor() {
                             { key: 'sci_feature3_title', label: 'Point 3 — Titre', type: 'text', placeholder: D.sci_feature3_title },
                             { key: 'sci_feature3_desc', label: 'Point 3 — Description', type: 'textarea', placeholder: D.sci_feature3_desc },
                             { key: 'sci_footnote', label: 'Note bas de section', type: 'text', placeholder: D.sci_footnote },
-                            { key: 'sci_image', label: 'Image éditoriale (URL)', type: 'text', placeholder: D.sci_image },
+                            { key: 'sci_image', label: 'Image éditoriale Expertise', type: 'image', placeholder: D.sci_image },
                         ]
                     },
                     /* ═══ CERTIFICATIONS ═══ */
@@ -218,39 +223,39 @@ export default async function HomePageEditor() {
                     {
                         title: '📸 Galerie Transformations (3 images)',
                         fields: [
-                            { key: 'transf_overtitle', label: 'Sur-titre section', type: 'text', placeholder: D.transf_overtitle },
-                            { key: 'transf_title', label: 'Titre section (H2)', type: 'text', placeholder: D.transf_title },
-                            { key: 'transf_badge', label: 'Badge sur les images', type: 'text', placeholder: D.transf_badge },
-                            { key: 'transf1_label', label: 'Image 1 — Label', type: 'text', placeholder: D.transf1_label },
-                            { key: 'transf1_image', label: 'Image 1 — URL', type: 'text', placeholder: D.transf1_image },
-                            { key: 'transf2_label', label: 'Image 2 — Label', type: 'text', placeholder: D.transf2_label },
-                            { key: 'transf2_image', label: 'Image 2 — URL', type: 'text', placeholder: D.transf2_image },
-                            { key: 'transf3_label', label: 'Image 3 — Label', type: 'text', placeholder: D.transf3_label },
-                            { key: 'transf3_image', label: 'Image 3 — URL', type: 'text', placeholder: D.transf3_image },
+                            { key: 'transf_overtitle', label: 'Sur-titre section', type: 'text', placeholder: D.transf_overtitle, hint: "Petit texte doré au-dessus du titre transformations" },
+                            { key: 'transf_title', label: 'Titre section (H2)', type: 'text', placeholder: D.transf_title, hint: "Titre du carrousel des transformations" },
+                            { key: 'transf_badge', label: 'Badge sur les images', type: 'text', placeholder: D.transf_badge, hint: "Petit badge affiché sur chaque image de transformation" },
+                            { key: 'transf1_label', label: 'Image 1 — Label', type: 'text', placeholder: D.transf1_label, hint: "Légende de la première transformation" },
+                            { key: 'transf1_image', label: 'Image 1', type: 'image', placeholder: D.transf1_image, hint: "Première image avant/après" },
+                            { key: 'transf2_label', label: 'Image 2 — Label', type: 'text', placeholder: D.transf2_label, hint: "Légende de la deuxième transformation" },
+                            { key: 'transf2_image', label: 'Image 2', type: 'image', placeholder: D.transf2_image, hint: "Deuxième image avant/après" },
+                            { key: 'transf3_label', label: 'Image 3 — Label', type: 'text', placeholder: D.transf3_label, hint: "Légende de la troisième transformation" },
+                            { key: 'transf3_image', label: 'Image 3', type: 'image', placeholder: D.transf3_image, hint: "Troisième image avant/après" },
                         ]
                     },
                     /* ═══ CTA FINAL ═══ */
                     {
                         title: '🎯 Section CTA Final (Devenir Partenaire)',
                         fields: [
-                            { key: 'cta_overtitle', label: 'Sur-titre', type: 'text', placeholder: D.cta_overtitle },
-                            { key: 'cta_title_line1', label: 'Titre ligne 1', type: 'text', placeholder: D.cta_title_line1 },
-                            { key: 'cta_title_line2', label: 'Titre ligne 2 (en doré)', type: 'text', placeholder: D.cta_title_line2 },
-                            { key: 'cta_subtitle', label: 'Sous-titre/Description', type: 'textarea', placeholder: D.cta_subtitle },
-                            { key: 'cta_btn_primary_label', label: 'Bouton principal — Texte', type: 'text', placeholder: D.cta_btn_primary_label },
-                            { key: 'cta_btn_primary_link', label: 'Bouton principal — Lien', type: 'text', placeholder: D.cta_btn_primary_link },
-                            { key: 'cta_btn_secondary_label', label: 'Bouton secondaire — Texte', type: 'text', placeholder: D.cta_btn_secondary_label },
-                            { key: 'cta_btn_secondary_link', label: 'Bouton secondaire — Lien', type: 'text', placeholder: D.cta_btn_secondary_link },
-                            { key: 'cta_note', label: 'Note sous les boutons', type: 'text', placeholder: D.cta_note },
+                            { key: 'cta_overtitle', label: 'Sur-titre', type: 'text', placeholder: D.cta_overtitle, hint: "Petit texte doré au-dessus du titre CTA final" },
+                            { key: 'cta_title_line1', label: 'Titre ligne 1', type: 'text', placeholder: D.cta_title_line1, hint: "Titre de la section d'appel à l'action final" },
+                            { key: 'cta_title_line2', label: 'Titre ligne 2 (en doré)', type: 'text', placeholder: D.cta_title_line2, hint: "Deuxième ligne du titre CTA en dorado" },
+                            { key: 'cta_subtitle', label: 'Sous-titre/Description', type: 'textarea', placeholder: D.cta_subtitle, hint: "Paragraphe descriptif de l'appel à l'action" },
+                            { key: 'cta_btn_primary_label', label: 'Bouton principal — Texte', type: 'text', placeholder: D.cta_btn_primary_label, hint: "Texte du bouton principal (Demande d'accès)" },
+                            { key: 'cta_btn_primary_link', label: 'Bouton principal — Lien', type: 'text', placeholder: D.cta_btn_primary_link, hint: "Lien du bouton principal" },
+                            { key: 'cta_btn_secondary_label', label: 'Bouton secondaire — Texte', type: 'text', placeholder: D.cta_btn_secondary_label, hint: "Texte du bouton secondaire (Contact)" },
+                            { key: 'cta_btn_secondary_link', label: 'Bouton secondaire — Lien', type: 'text', placeholder: D.cta_btn_secondary_link, hint: "Lien du bouton secondaire" },
+                            { key: 'cta_note', label: 'Note sous les boutons', type: 'text', placeholder: D.cta_note, hint: "Petite note informative sous les boutons" },
                         ]
                     },
                     /* ═══ FOOTER ═══ */
                     {
                         title: '🏷️ Footer — Identité de Marque',
                         fields: [
-                            { key: 'footer_brand', label: 'Nom de marque (logo texte)', type: 'text', placeholder: D.footer_brand },
-                            { key: 'footer_tagline', label: 'Tagline sous le logo', type: 'text', placeholder: D.footer_tagline },
-                            { key: 'footer_copyright', label: 'Copyright (bas de page)', type: 'text', placeholder: D.footer_copyright },
+                            { key: 'footer_brand', label: 'Nom de marque (logo texte)', type: 'text', placeholder: D.footer_brand, hint: "Nom de l'entreprise affiché dans le footer" },
+                            { key: 'footer_tagline', label: 'Tagline sous le logo', type: 'text', placeholder: D.footer_tagline, hint: "Slogan ou descriptif court sous le nom de marque" },
+                            { key: 'footer_copyright', label: 'Copyright (bas de page)', type: 'text', placeholder: D.footer_copyright, hint: "Texte de copyright en bas de page" },
                         ]
                     },
                     {

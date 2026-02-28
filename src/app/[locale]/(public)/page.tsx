@@ -4,7 +4,8 @@ import { getPageContents, type Locale } from '@/domains/admin/cms-actions'
 import { ScrollReveal } from '@/components/ui/scroll-reveal'
 import { Marquee } from '@/components/ui/marquee'
 import { ArrowRight, ArrowDown, ShieldCheck, FlaskConical, GraduationCap, Sparkles } from 'lucide-react'
-import Image from 'next/image'
+import { CmsImage } from '@/components/CmsImage'
+import { CmsImageWithOverlay } from '@/components/CmsImageWithOverlay'
 import { TransformationCarousel } from '@/components/TransformationCarousel'
 
 /* ──────────────────────────────────────────
@@ -20,6 +21,9 @@ const DEFAULTS: Record<string, string> = {
     hero_cta_label: "Découvrir l'Essentiel",
     hero_cta_link: '/shop',
     hero_image: '/images/hero-bg.png',
+
+    /* TRUST MARQUEE */
+    trust_marquee_text: "✦ Swiss Official Distributor  ✦ KFDA Certified ✦ ISO 22716 ✦ K-Beauty Innovation ✦ +120 Produits Professionnels ✦ Formation Certifiée ✦",
 
     /* BRAND STATEMENT */
     stmt_text: "Nous apportons l'innovation dermocosmétique coréenne la plus avancée au monde pour les professionnels suisses exigeants.",
@@ -188,18 +192,25 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
             ════════════════════════════════════════ */}
             <section className="relative h-screen min-h-[600px] flex items-center overflow-hidden">
                 {/* Background image */}
-                <div className="absolute inset-0 z-0">
-                    <Image
-                        src={g(cms, 'hero_image')}
-                        alt="DermaKor Swiss — KRX Aesthetics"
-                        fill
-                        className="object-cover"
-                        priority
-                        sizes="100vw"
-                    />
-                    {/* Warm light overlay — champagne tint, NOT black */}
+                <CmsImageWithOverlay
+                    src={g(cms, 'hero_image')}
+                    alt="DermaKor Swiss — KRX Aesthetics"
+                    className="absolute inset-0 z-0"
+                    priority
+                    sizes="100vw"
+                    overlayTitle={cms['hero_image_overlay_title']}
+                    overlaySubtitle={cms['hero_image_overlay_subtitle']}
+                    overlayCtaText={cms['hero_image_overlay_cta_text']}
+                    overlayCtaLink={cms['hero_image_overlay_cta_link']}
+                    overlayPosition={cms['hero_image_overlay_position']}
+                    overlayDark={cms['hero_image_overlay_dark']}
+                    fallbackText="Hero Background"
+                />
+
+                {/* Manual overlay text from standard hero fields if no CMS overlay is set */}
+                {!(cms['hero_image_overlay_title'] || cms['hero_image_overlay_subtitle']) && (
                     <div className="absolute inset-0 bg-gradient-to-r from-[#FAFAF8]/85 via-[#FAFAF8]/50 to-transparent z-10" />
-                </div>
+                )}
 
                 <div className="container relative z-20 px-6 md:px-12 max-w-7xl mx-auto">
                     <div className="max-w-[620px] space-y-8">
@@ -238,6 +249,18 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                     <div className="w-px h-12 bg-[#C0A76A] animate-pulse" />
                     <ArrowDown size={12} className="text-[#C0A76A]" />
                 </div>
+            </section>
+
+            {/* ════════════════════════════════════════
+                SECTION 2 — TRUST MARQUEE
+            ════════════════════════════════════════ */}
+            <section className="bg-[#F5F0EB] h-[56px] border-b border-[#E8E4DC] overflow-hidden flex items-center">
+                <Marquee speed={30} className="py-2">
+                    <span className="font-oswald text-[11px] uppercase tracking-[3px] text-[#262626] flex items-center gap-4">
+                        {g(cms, 'trust_marquee_text')}
+                        {g(cms, 'trust_marquee_text')}
+                    </span>
+                </Marquee>
             </section>
 
             {/* ════════════════════════════════════════
@@ -333,6 +356,8 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                                 link={g(cms, 'col1_link')}
                                 image={g(cms, 'col1_image')}
                                 aspectClass="aspect-[4/3]"
+                                cms={cms}
+                                prefix="col1"
                             />
                         </ScrollReveal>
                         <div className="md:col-span-2 grid grid-rows-2 gap-2">
@@ -343,6 +368,8 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                                     link={g(cms, 'col2_link')}
                                     image={g(cms, 'col2_image')}
                                     aspectClass="aspect-[4/3]"
+                                    cms={cms}
+                                    prefix="col2"
                                 />
                             </ScrollReveal>
                             <ScrollReveal delay={150}>
@@ -352,6 +379,8 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                                     link={g(cms, 'col3_link')}
                                     image={g(cms, 'col3_image')}
                                     aspectClass="aspect-[4/3]"
+                                    cms={cms}
+                                    prefix="col3"
                                 />
                             </ScrollReveal>
                         </div>
@@ -367,6 +396,8 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                                     link={g(cms, 'col4_link')}
                                     image={g(cms, 'col4_image')}
                                     aspectClass="aspect-[4/3]"
+                                    cms={cms}
+                                    prefix="col4"
                                 />
                             </ScrollReveal>
                             <ScrollReveal delay={150}>
@@ -376,6 +407,8 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                                     link={g(cms, 'col5_link')}
                                     image={g(cms, 'col5_image')}
                                     aspectClass="aspect-[4/3]"
+                                    cms={cms}
+                                    prefix="col5"
                                 />
                             </ScrollReveal>
                         </div>
@@ -386,6 +419,8 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                                 link={g(cms, 'col6_link')}
                                 image={g(cms, 'col6_image')}
                                 aspectClass="aspect-[4/3]"
+                                cms={cms}
+                                prefix="col6"
                             />
                         </ScrollReveal>
                     </div>
@@ -434,12 +469,18 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                         {/* Image column — full bleed */}
                         <ScrollReveal className="relative min-h-[400px] lg:min-h-0 overflow-hidden">
                             <div className="absolute inset-0 bg-[#F5F0EB]">
-                                <Image
+                                <CmsImageWithOverlay
                                     src={g(cms, 'sig_image')}
                                     alt={g(cms, 'sig_title_line1')}
-                                    fill
-                                    className="object-cover"
+                                    className="w-full h-full"
                                     sizes="(max-width: 1024px) 100vw, 50vw"
+                                    overlayTitle={cms['sig_image_overlay_title']}
+                                    overlaySubtitle={cms['sig_image_overlay_subtitle']}
+                                    overlayCtaText={cms['sig_image_overlay_cta_text']}
+                                    overlayCtaLink={cms['sig_image_overlay_cta_link']}
+                                    overlayPosition={cms['sig_image_overlay_position']}
+                                    overlayDark={cms['sig_image_overlay_dark']}
+                                    fallbackText="Signature Product"
                                 />
                             </div>
                         </ScrollReveal>
@@ -492,12 +533,18 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                         {/* Image right — bleeds slightly */}
                         <ScrollReveal delay={150} className="relative aspect-[3/4] overflow-visible">
                             <div className="absolute inset-0 xl:translate-x-8 overflow-hidden">
-                                <Image
+                                <CmsImageWithOverlay
                                     src={g(cms, 'sci_image')}
                                     alt={g(cms, 'sci_overtitle')}
-                                    fill
-                                    className="object-cover"
+                                    className="w-full h-full"
                                     sizes="(max-width: 1024px) 100vw, 45vw"
+                                    overlayTitle={cms['sci_image_overlay_title']}
+                                    overlaySubtitle={cms['sci_image_overlay_subtitle']}
+                                    overlayCtaText={cms['sci_image_overlay_cta_text']}
+                                    overlayCtaLink={cms['sci_image_overlay_cta_link']}
+                                    overlayPosition={cms['sci_image_overlay_position']}
+                                    overlayDark={cms['sci_image_overlay_dark']}
+                                    fallbackText="Expertise Science"
                                 />
                             </div>
                         </ScrollReveal>
@@ -610,28 +657,40 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
 
 /* ── Sub-components ── */
 function CollectionCard({
-    name, category, link, image, aspectClass
+    name, category, link, image, aspectClass, cms, prefix
 }: {
-    name: string; category: string; link: string; image: string; aspectClass: string
+    name: string; category: string; link: string; image: string; aspectClass: string; cms: any; prefix: string
 }) {
+    const imgKey = `${prefix}_image`
     return (
         <Link href={link} className={`group relative ${aspectClass} overflow-hidden block bg-[#F5F0EB] border border-[#E8E4DC] w-full`}>
-            <Image
+            <CmsImageWithOverlay
                 src={image}
                 alt={name}
-                fill
-                className="object-cover group-hover:scale-105 transition-transform duration-700"
+                className="w-full h-full"
                 sizes="(max-width: 768px) 100vw, 40vw"
+                overlayTitle={cms[`${imgKey}_overlay_title`]}
+                overlaySubtitle={cms[`${imgKey}_overlay_subtitle`]}
+                overlayCtaText={cms[`${imgKey}_overlay_cta_text`]}
+                overlayCtaLink={cms[`${imgKey}_overlay_cta_link`]}
+                overlayPosition={cms[`${imgKey}_overlay_position`]}
+                overlayDark={cms[`${imgKey}_overlay_dark`]}
+                fallbackText={name}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#262626]/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-            <div className="absolute bottom-0 left-0 right-0 p-5 translate-y-2 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-500">
-                <span className="font-oswald text-[9px] uppercase tracking-[3px] text-[#C0A76A]">{category}</span>
-                <p className="font-oswald text-lg uppercase text-white mt-1">{name}</p>
-            </div>
-            {/* Always-visible label fallback */}
-            <div className="absolute bottom-0 left-0 right-0 bg-[#FAFAF8]/90 py-3 px-4 group-hover:opacity-0 transition-opacity duration-300">
-                <p className="font-oswald text-xs uppercase tracking-widest text-[#262626]">{name}</p>
-            </div>
+            {/* Gradient overlay for hover effect (only if no CMS overlay) */}
+            {!(cms[`${imgKey}_overlay_title` || cms[`${imgKey}_overlay_subtitle`]]) && (
+                <>
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#262626]/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                    <div className="absolute bottom-0 left-0 right-0 p-5 translate-y-2 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-500 z-10">
+                        <span className="font-oswald text-[9px] uppercase tracking-[3px] text-[#C0A76A]">{category}</span>
+                        <p className="font-oswald text-lg uppercase text-white mt-1">{name}</p>
+                    </div>
+                    {/* Always-visible label fallback */}
+                    <div className="absolute bottom-0 left-0 right-0 bg-[#FAFAF8]/90 py-3 px-4 group-hover:opacity-0 transition-opacity duration-300 z-10">
+                        <p className="font-oswald text-xs uppercase tracking-widest text-[#262626]">{name}</p>
+                    </div>
+                </>
+            )}
         </Link>
     )
 }
