@@ -1,17 +1,18 @@
-import { Link } from '@/navigation'
+﻿import { Link } from '@/navigation'
 import { getTranslations } from 'next-intl/server'
 import { getPageContents, type Locale } from '@/domains/admin/cms-actions'
 import { ScrollReveal } from '@/components/ui/scroll-reveal'
 import { Marquee } from '@/components/ui/marquee'
 import { ArrowRight, ArrowDown, ShieldCheck, FlaskConical, GraduationCap, Sparkles } from 'lucide-react'
+import { HeroAnimated } from '@/components/HeroAnimated'
 import { CmsImage } from '@/components/CmsImage'
 import { CmsImageWithOverlay } from '@/components/CmsImageWithOverlay'
 import { TransformationCarousel } from '@/components/TransformationCarousel'
 
-/* ──────────────────────────────────────────
-   DEFAULT CONTENT (FR — CMS fallback)
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   DEFAULT CONTENT (FR â€” CMS fallback)
    EVERY key here maps to a page_contents row
-────────────────────────────────────────── */
+â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 const DEFAULTS: Record<string, string> = {
     /* HERO */
     hero_overtitle: 'IMPORTATEUR OFFICIEL KRX AESTHETICS • SUISSE',
@@ -26,9 +27,9 @@ const DEFAULTS: Record<string, string> = {
     trust_marquee_text: "✦ Swiss Official Distributor  ✦ KFDA Certified ✦ ISO 22716 ✦ K-Beauty Innovation ✦ +120 Produits Professionnels ✦ Formation Certifiée ✦",
 
     /* BRAND STATEMENT */
-    stmt_text: "Nous apportons l'innovation dermocosmétique coréenne la plus avancée au monde pour les professionnels suisses exigeants.",
-    stmt_highlight: "innovation dermocosmétique coréenne",
-    stmt_note: "← Fondé sur 15 ans d'expertise KRX",
+    stmt_text: "Nous apportons l'innovation dermocosmétique Coréenne la plus avancée au monde pour les professionnels suisses exigeants.",
+    stmt_highlight: "innovation dermocosmétique Coréenne",
+    stmt_note: "â† Fondé sur 15 ans d'expertise KRX",
 
     /* KEY FIGURES */
     fig1_number: '+120',
@@ -37,7 +38,7 @@ const DEFAULTS: Record<string, string> = {
     fig2_label: "d'Innovation KRX",
     fig3_number: '100%',
     fig3_label: 'Grade Clinique',
-    fig4_number: '🇨🇭',
+    fig4_number: '',
     fig4_label: 'Distribution Suisse Officielle',
 
     /* COLLECTIONS */
@@ -73,16 +74,16 @@ const DEFAULTS: Record<string, string> = {
     sig_title_line1: 'Green Sea Peel',
     sig_title_line2: 'Biomicroaiguilles',
     sig_description: "Le seul peeling 100% naturel à base d'algues micronisées. Agit en profondeur pour régénérer, purifier et révéler la peau.",
-    sig_warning: '⚠️ Réservé aux professionnels certifiés. Formation préalable obligatoire auprès de DermaKor Swiss.',
+    sig_warning: '⚠️ ⚠️ Réservé aux professionnels certifiés. Formation préalable obligatoire auprès de DermaKor Swiss.',
     sig_cta_label: 'En savoir plus',
     sig_cta_link: '/shop',
     sig_image: '/images/signature-gsp.jpg',
 
     /* SCIENCE */
-    sci_overtitle: 'LA SCIENCE DERRIÈRE KRX',
+    sci_overtitle: 'LA SCIENCE DERRIÃˆRE KRX',
     sci_title: "Des actifs d'exception pour des résultats exceptionnels",
     sci_feature1_title: 'Actifs Ultra-Concentrés',
-    sci_feature1_desc: 'Formules de grade clinique à efficacité prouvée en laboratoire.',
+    sci_feature1_desc: 'Formules de grade clinique Ã  efficacité prouvée en laboratoire.',
     sci_feature2_title: 'Biotechnologie Coréenne',
     sci_feature2_desc: "15 ans d'R&D intégrant les découvertes dermato les plus récentes.",
     sci_feature3_title: 'Standards Suisses',
@@ -121,7 +122,7 @@ const DEFAULTS: Record<string, string> = {
     cta_overtitle: 'DEVENIR PARTENAIRE',
     cta_title_line1: 'Rejoignez le Réseau',
     cta_title_line2: "d'Excellence Suisse",
-    cta_subtitle: 'Accédez aux tarifs professionnels, aux formations certifiées et à un support commercial dédié.',
+    cta_subtitle: 'Accédez aux tarifs professionnels, aux formations certifiées et Ã  un support commercial dédié.',
     cta_btn_primary_label: "Demande d'Accès Professionnel",
     cta_btn_primary_link: '/pro',
     cta_btn_secondary_label: 'Nous Contacter',
@@ -161,12 +162,12 @@ const DEFAULTS: Record<string, string> = {
     footer_email: 'info@dermakorswiss.com',
     footer_address1: 'Chem. des Champs Courbes 1, 1024 Ecublens',
     footer_address2: 'Cuvillard 21, 1302 Vufflens-la-Ville',
-    footer_hours: 'Lun–Ven : 9h00 – 16h00',
+    footer_hours: 'Lunâ€“Ven : 9h00 â€“ 16h00',
     footer_legal1_label: 'CGV',
     footer_legal1_href: '/cgv',
     footer_legal2_label: 'Confidentialité',
     footer_legal2_href: '/privacy',
-    footer_copyright: '© 2025 DermaKor Swiss Sàrl. Made in Switzerland 🇨🇭',
+    footer_copyright: '© 2025 DermaKor Swiss SÃ rl. Made in Switzerland ',
 }
 
 function g(cms: Record<string, string>, key: string): string {
@@ -187,14 +188,14 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
     return (
         <div className="flex flex-col w-full overflow-x-hidden">
 
-            {/* ════════════════════════════════════════
-                SECTION 1 — HERO CINEMATOGRÁFICO
-            ════════════════════════════════════════ */}
-            <section className="relative h-screen min-h-[600px] flex items-center overflow-hidden">
+            {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+                SECTION 1 â€” HERO CINEMATOGRÃFICO
+            â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+            <section className="relative min-h-[70vh] md:min-h-[85vh] lg:h-screen lg:min-h-[600px] flex items-center overflow-hidden">
                 {/* Background image */}
                 <CmsImageWithOverlay
                     src={g(cms, 'hero_image')}
-                    alt="DermaKor Swiss — KRX Aesthetics"
+                    alt="DermaKor Swiss â€” KRX Aesthetics"
                     className="absolute inset-0 z-0"
                     priority
                     sizes="100vw"
@@ -212,14 +213,14 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                     <div className="absolute inset-0 bg-gradient-to-r from-[#FAFAF8]/85 via-[#FAFAF8]/50 to-transparent z-10" />
                 )}
 
-                <div className="container relative z-20 px-6 md:px-12 max-w-7xl mx-auto">
-                    <div className="max-w-[620px] space-y-8">
+                <div className="container relative z-20 px-5 md:px-12 max-w-7xl mx-auto">
+                    <div className="max-w-[620px] space-y-5 md:space-y-8">
                         <div className="space-y-1">
                             <h1 className="font-oswald leading-[1.05]">
-                                <span className="block text-5xl md:text-7xl xl:text-[88px] font-light text-[#262626] tracking-tight">
+                                <span className="block text-3xl md:text-5xl lg:text-7xl xl:text-[88px] font-light text-[#262626] tracking-tight">
                                     {g(cms, 'hero_title_line1')}
                                 </span>
-                                <span className="block text-5xl md:text-7xl xl:text-[88px] font-bold italic text-[#C0A76A] tracking-tight">
+                                <span className="block text-3xl md:text-5xl lg:text-7xl xl:text-[88px] font-bold italic text-[#C0A76A] tracking-tight">
                                     {g(cms, 'hero_title_line2')}
                                 </span>
                             </h1>
@@ -232,10 +233,10 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                             {g(cms, 'hero_subtitle')}
                         </p>
 
-                        <div className="pt-2 flex items-center gap-3">
+                        <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                             <Link
                                 href={g(cms, 'hero_cta_link')}
-                                className="inline-flex items-center gap-3 px-8 py-3.5 border border-[#262626] text-[#262626] font-oswald text-xs uppercase tracking-[2px] hover:bg-[#262626] hover:text-white transition-all duration-300 group"
+                                className="inline-flex items-center justify-center gap-3 px-8 py-3.5 min-h-[52px] border border-[#262626] text-[#262626] font-oswald text-xs uppercase tracking-[2px] hover:bg-[#262626] hover:text-white transition-all duration-300 group tap-scale"
                             >
                                 {g(cms, 'hero_cta_label')}
                                 <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
@@ -244,16 +245,16 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                     </div>
                 </div>
 
-                {/* Scroll indicator */}
-                <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2">
+                {/* Scroll indicator â€” hidden on mobile */}
+                <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 hidden md:flex flex-col items-center gap-2">
                     <div className="w-px h-12 bg-[#C0A76A] animate-pulse" />
                     <ArrowDown size={12} className="text-[#C0A76A]" />
                 </div>
             </section>
 
-            {/* ════════════════════════════════════════
-                SECTION 2 — TRUST MARQUEE
-            ════════════════════════════════════════ */}
+            {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+                SECTION 2 â€” TRUST MARQUEE
+            â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
             <section className="bg-[#F5F0EB] h-[56px] border-b border-[#E8E4DC] overflow-hidden flex items-center">
                 <Marquee speed={30} className="py-2">
                     <span className="font-oswald text-[11px] uppercase tracking-[3px] text-[#262626] flex items-center gap-4">
@@ -263,12 +264,12 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                 </Marquee>
             </section>
 
-            {/* ════════════════════════════════════════
-                SECTION 2 — BRAND STATEMENT
-            ════════════════════════════════════════ */}
-            <section className="bg-[#FAFAF8] py-28 md:py-36">
+            {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+                SECTION 2 â€” BRAND STATEMENT
+            â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+            <section className="bg-[#FAFAF8] py-12 md:py-28 lg:py-36">
                 <ScrollReveal>
-                    <div className="container mx-auto px-6 md:px-12 max-w-6xl">
+                    <div className="container mx-auto px-5 md:px-12 max-w-6xl">
                         <div className="flex gap-10 md:gap-16 items-start">
                             {/* Vertical label */}
                             <div className="hidden md:flex flex-col items-center gap-4 pt-2 shrink-0">
@@ -282,7 +283,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                             </div>
 
                             <div className="space-y-8">
-                                <p className="font-oswald text-3xl md:text-4xl xl:text-[52px] leading-[1.2] text-[#262626] italic">
+                                <p className="font-oswald text-2xl md:text-3xl lg:text-4xl xl:text-[52px] leading-[1.2] text-[#262626] italic">
                                     {stmtParts.length > 1 ? (
                                         <>
                                             {stmtParts[0]}
@@ -301,13 +302,13 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                 </ScrollReveal>
             </section>
 
-            {/* ════════════════════════════════════════
-                SECTION 3 — CHIFFRES CLÉS
-            ════════════════════════════════════════ */}
-            <section className="bg-[#F5F0EB] py-20 border-y border-[#E8E4DC]">
+            {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+                SECTION 3 â€” CHIFFRES CLÉS
+            â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+            <section className="bg-[#F5F0EB] py-10 md:py-20 border-y border-[#E8E4DC]">
                 {/* Gold top rule */}
                 <div className="h-px bg-[#C0A76A] w-full mb-0" style={{ height: '1px', background: '#C0A76A', marginBottom: 0 }} />
-                <div className="container mx-auto px-6 md:px-12 max-w-6xl py-16">
+                <div className="container mx-auto px-5 md:px-12 max-w-6xl py-8 md:py-16">
                     <ScrollReveal>
                         <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-[#E8E4DC]">
                             {[
@@ -316,8 +317,8 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                                 { n: g(cms, 'fig3_number'), l: g(cms, 'fig3_label') },
                                 { n: g(cms, 'fig4_number'), l: g(cms, 'fig4_label') },
                             ].map((fig, i) => (
-                                <div key={i} className="flex flex-col items-center justify-center text-center py-6 md:py-0 px-4 md:px-8 gap-3">
-                                    <span className="font-oswald font-bold text-5xl md:text-6xl xl:text-7xl text-[#C0A76A] leading-none">
+                                <div key={i} className="flex flex-col items-center justify-center text-center py-4 md:py-0 px-3 md:px-8 gap-2 md:gap-3">
+                                    <span className="font-oswald font-bold text-3xl md:text-5xl lg:text-6xl xl:text-7xl text-[#C0A76A] leading-none">
                                         {fig.n}
                                     </span>
                                     <span className="font-oswald text-[10px] uppercase tracking-[3px] text-[#6B6560]">
@@ -331,17 +332,17 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                 <div className="h-px" style={{ height: '1px', background: '#E8E4DC' }} />
             </section>
 
-            {/* ════════════════════════════════════════
-                SECTION 4 — COLLECTIONS ÉDITORIAL
-            ════════════════════════════════════════ */}
-            <section className="bg-[#FFFFFF] py-24 md:py-32">
-                <div className="container mx-auto px-6 md:px-12 max-w-7xl">
+            {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+                SECTION 4 â€” COLLECTIONS ÉDITORIAL
+            â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+            <section className="bg-[#FFFFFF] py-12 md:py-24 lg:py-32">
+                <div className="container mx-auto px-5 md:px-12 max-w-7xl">
                     <ScrollReveal>
                         <div className="mb-12">
                             <span className="font-oswald text-[11px] uppercase tracking-[4px] text-[#C0A76A]">
                                 {g(cms, 'col_overtitle')}
                             </span>
-                            <h2 className="font-oswald text-4xl md:text-[48px] text-[#262626] mt-3">
+                            <h2 className="font-oswald text-2xl md:text-4xl lg:text-[48px] text-[#262626] mt-3">
                                 {g(cms, 'col_title')}
                             </h2>
                         </div>
@@ -427,24 +428,24 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                 </div>
             </section>
 
-            {/* ════════════════════════════════════════
-                SECTION 5 — PRODUIT SIGNATURE
-            ════════════════════════════════════════ */}
+            {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+                SECTION 5 â€” PRODUIT SIGNATURE
+            â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
             <section className="bg-[#FAFAF8] border-y border-[#E8E4DC]">
                 <div className="container mx-auto px-0 max-w-full">
                     <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[600px]">
                         {/* Text column */}
-                        <div className="flex flex-col justify-center px-8 md:px-16 xl:px-24 py-20">
+                        <div className="flex flex-col justify-center px-5 md:px-8 lg:px-16 xl:px-24 py-12 md:py-20">
                             <ScrollReveal>
                                 <div className="space-y-6 max-w-md">
                                     <span className="font-oswald text-[10px] uppercase tracking-[3px] text-[#C0A76A] border border-[#C0A76A] px-3 py-1 inline-block">
                                         {g(cms, 'sig_badge')}
                                     </span>
                                     <h2 className="font-oswald leading-[1.1]">
-                                        <span className="block text-4xl md:text-5xl font-light text-[#262626]">
+                                        <span className="block text-2xl md:text-4xl lg:text-5xl font-light text-[#262626]">
                                             {g(cms, 'sig_title_line1')}
                                         </span>
-                                        <span className="block text-4xl md:text-5xl font-bold italic text-[#C0A76A]">
+                                        <span className="block text-2xl md:text-4xl lg:text-5xl font-bold italic text-[#C0A76A]">
                                             {g(cms, 'sig_title_line2')}
                                         </span>
                                     </h2>
@@ -466,7 +467,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                             </ScrollReveal>
                         </div>
 
-                        {/* Image column — full bleed */}
+                        {/* Image column â€” full bleed */}
                         <ScrollReveal className="relative min-h-[400px] lg:min-h-0 overflow-hidden">
                             <div className="absolute inset-0 bg-[#F5F0EB]">
                                 <CmsImageWithOverlay
@@ -488,12 +489,12 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                 </div>
             </section>
 
-            {/* ════════════════════════════════════════
-                SECTION 6 — LA SCIENCE
-            ════════════════════════════════════════ */}
-            <section className="bg-[#FFFFFF] py-24 md:py-32">
-                <div className="container mx-auto px-6 md:px-12 max-w-7xl">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 xl:gap-24 items-center">
+            {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+                SECTION 6 â€” LA SCIENCE
+            â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+            <section className="bg-[#FFFFFF] py-12 md:py-24 lg:py-32">
+                <div className="container mx-auto px-5 md:px-12 max-w-7xl">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 md:gap-16 xl:gap-24 items-center">
                         {/* Text left */}
                         <ScrollReveal>
                             <div className="space-y-10">
@@ -501,7 +502,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                                     <span className="font-oswald text-[11px] uppercase tracking-[4px] text-[#C0A76A]">
                                         {g(cms, 'sci_overtitle')}
                                     </span>
-                                    <h2 className="font-oswald text-3xl md:text-[44px] text-[#262626] leading-[1.15]">
+                                    <h2 className="font-oswald text-2xl md:text-3xl lg:text-[44px] text-[#262626] leading-[1.15]">
                                         {g(cms, 'sci_title')}
                                     </h2>
                                 </div>
@@ -530,7 +531,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                             </div>
                         </ScrollReveal>
 
-                        {/* Image right — bleeds slightly */}
+                        {/* Image right â€” bleeds slightly */}
                         <ScrollReveal delay={150} className="relative aspect-[3/4] overflow-visible">
                             <div className="absolute inset-0 xl:translate-x-8 overflow-hidden">
                                 <CmsImageWithOverlay
@@ -552,13 +553,13 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                 </div>
             </section>
 
-            {/* ════════════════════════════════════════
-                SECTION 7 — CERTIFICATIONS BAND
-            ════════════════════════════════════════ */}
+            {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+                SECTION 7 â€” CERTIFICATIONS BAND
+            â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
             <section className="bg-[#F5F0EB] border-t border-[#C0A76A]">
-                <div className="container mx-auto px-6 md:px-12 max-w-6xl py-12">
+                <div className="container mx-auto px-4 md:px-8 lg:px-12 max-w-6xl py-8 md:py-12">
                     <ScrollReveal>
-                        <div className="flex flex-wrap items-center justify-center gap-0 divide-x divide-[#E8E4DC]">
+                        <div className="flex flex-wrap items-center justify-center gap-0 divide-x divide-[#E8E4DC] gap-y-4">
                             {[
                                 g(cms, 'cert_label1'),
                                 g(cms, 'cert_label2'),
@@ -566,7 +567,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                                 g(cms, 'cert_label4'),
                                 g(cms, 'cert_label5'),
                             ].map((cert, i) => (
-                                <div key={i} className="flex flex-col items-center px-8 md:px-12 py-4 gap-2">
+                                <div key={i} className="flex flex-col items-center px-4 md:px-8 lg:px-12 py-3 md:py-4 gap-2">
                                     <span className="font-oswald text-sm font-bold text-[#8A8578] uppercase tracking-wider">
                                         {cert}
                                     </span>
@@ -578,17 +579,17 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                 </div>
             </section>
 
-            {/* ════════════════════════════════════════
-                SECTION 8 — TRANSFORMATIONS GALLERY (Carousel)
-            ════════════════════════════════════════ */}
-            <section className="bg-[#FAFAF8] py-24 md:py-32 overflow-hidden">
-                <div className="container mx-auto px-6 md:px-12 max-w-7xl text-center">
+            {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+                SECTION 8 â€” TRANSFORMATIONS GALLERY (Carousel)
+            â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+            <section className="bg-[#FAFAF8] py-12 md:py-24 lg:py-32 overflow-hidden">
+                <div className="container mx-auto px-5 md:px-12 max-w-7xl text-center">
                     <ScrollReveal>
                         <div className="mb-6">
                             <span className="font-oswald text-[11px] uppercase tracking-[4px] text-[#C0A76A]">
                                 {g(cms, 'transf_overtitle')}
                             </span>
-                            <h2 className="font-oswald text-4xl md:text-[56px] text-[#262626] mt-3">
+                            <h2 className="font-oswald text-2xl md:text-4xl lg:text-[56px] text-[#262626] mt-3">
                                 {g(cms, 'transf_title')}
                             </h2>
                             <div className="w-24 h-px bg-[#C0A76A] mx-auto mt-6" />
@@ -608,21 +609,21 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                 </div>
             </section>
 
-            {/* ════════════════════════════════════════
-                SECTION 9 — CTA FINAL
-            ════════════════════════════════════════ */}
-            <section className="bg-[#F5F0EB] border-t border-[#C0A76A] py-28 md:py-40">
-                <div className="container mx-auto px-6 md:px-12 max-w-3xl text-center">
+            {/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+                SECTION 9 â€” CTA FINAL
+            â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */}
+            <section className="bg-[#F5F0EB] border-t border-[#C0A76A] py-14 md:py-28 lg:py-40">
+                <div className="container mx-auto px-5 md:px-12 max-w-3xl text-center">
                     <ScrollReveal>
                         <div className="space-y-8">
                             <span className="font-oswald text-[11px] uppercase tracking-[4px] text-[#C0A76A]">
                                 {g(cms, 'cta_overtitle')}
                             </span>
                             <h2 className="font-oswald leading-[1.05]">
-                                <span className="block text-4xl md:text-[64px] font-light text-[#262626]">
+                                <span className="block text-2xl md:text-4xl lg:text-[64px] font-light text-[#262626]">
                                     {g(cms, 'cta_title_line1')}
                                 </span>
-                                <span className="block text-4xl md:text-[64px] font-bold text-[#C0A76A]">
+                                <span className="block text-2xl md:text-4xl lg:text-[64px] font-bold text-[#C0A76A]">
                                     {g(cms, 'cta_title_line2')}
                                 </span>
                             </h2>
@@ -632,13 +633,13 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
                                 <Link
                                     href={g(cms, 'cta_btn_primary_link')}
-                                    className="inline-block px-10 py-4 bg-[#C0A76A] text-white font-oswald text-xs uppercase tracking-[2px] hover:bg-[#A8914F] transition-colors duration-300"
+                                    className="inline-flex items-center justify-center px-10 py-4 min-h-[52px] bg-[#C0A76A] text-white font-oswald text-xs uppercase tracking-[2px] hover:bg-[#A8914F] transition-colors duration-300 tap-scale w-full sm:w-auto"
                                 >
                                     {g(cms, 'cta_btn_primary_label')}
                                 </Link>
                                 <Link
                                     href={g(cms, 'cta_btn_secondary_link')}
-                                    className="inline-block px-10 py-4 border border-[#262626] text-[#262626] font-oswald text-xs uppercase tracking-[2px] hover:bg-[#262626] hover:text-white transition-all duration-300"
+                                    className="inline-flex items-center justify-center px-10 py-4 min-h-[52px] border border-[#262626] text-[#262626] font-oswald text-xs uppercase tracking-[2px] hover:bg-[#262626] hover:text-white transition-all duration-300 tap-scale w-full sm:w-auto"
                                 >
                                     {g(cms, 'cta_btn_secondary_label')}
                                 </Link>
@@ -655,7 +656,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
     )
 }
 
-/* ── Sub-components ── */
+/* â”€â”€ Sub-components â”€â”€ */
 function CollectionCard({
     name, category, link, image, aspectClass, cms, prefix
 }: {

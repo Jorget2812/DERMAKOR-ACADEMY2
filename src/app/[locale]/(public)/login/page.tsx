@@ -36,14 +36,14 @@ export default function LoginPage() {
     }
 
     return (
-        <div className="min-h-[80vh] flex items-center justify-center px-4 py-24 bg-[#FDFCFB] relative overflow-hidden">
+        <div className="min-h-[80vh] flex items-center justify-center px-5 md:px-4 py-16 md:py-24 bg-[#FDFCFB] relative overflow-hidden">
             {/* Background elements */}
             <div className="absolute top-0 right-0 w-[30%] h-[30%] bg-accent/5 rounded-full blur-[100px]" />
             <div className="absolute bottom-0 left-0 w-[30%] h-[30%] bg-accent/5 rounded-full blur-[100px]" />
 
             <Card className="max-w-md w-full border-none shadow-2xl bg-white relative z-10">
-                <CardHeader className="space-y-4 pt-10 pb-6 text-center">
-                    <div className="w-16 h-16 rounded-2xl bg-accent/5 flex items-center justify-center text-accent mx-auto mb-2 border border-accent/10">
+                <CardHeader className="space-y-4 pt-8 md:pt-10 pb-4 md:pb-6 text-center">
+                    <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-accent/5 flex items-center justify-center text-accent mx-auto mb-2 border border-accent/10">
                         <ShieldCheck size={32} />
                     </div>
                     <CardTitle className="text-3xl font-serif text-primary">Accès Professionnel</CardTitle>
@@ -51,7 +51,7 @@ export default function LoginPage() {
                         Veuillez vous connecter pour accéder à votre dashboard et à l'Académie.
                     </CardDescription>
                 </CardHeader>
-                <CardContent className="px-10 pb-10">
+                <CardContent className="px-6 md:px-10 pb-8 md:pb-10">
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div className="space-y-2">
                             <Label htmlFor="email" className="text-[10px] uppercase tracking-widest font-bold text-slate-400">Email professionnel</Label>

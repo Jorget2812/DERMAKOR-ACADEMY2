@@ -66,10 +66,10 @@ export default function ContactPage() {
     }
 
     return (
-        <div className="bg-[#FAFAF8] min-h-screen pt-32 pb-24">
-            <div className="container mx-auto px-6 max-w-7xl">
-                <header className="text-center mb-16">
-                    <h1 className="font-oswald text-4xl md:text-6xl font-bold text-[#C0A76A] uppercase tracking-tight mb-6">
+        <div className="bg-[#FAFAF8] min-h-screen pt-8 md:pt-32 pb-16 md:pb-24">
+            <div className="container mx-auto px-5 md:px-6 max-w-7xl">
+                <header className="text-center mb-10 md:mb-16">
+                    <h1 className="font-oswald text-3xl md:text-4xl lg:text-6xl font-bold text-[#C0A76A] uppercase tracking-tight mb-4 md:mb-6">
                         {g('contact_title')}
                     </h1>
                     <p className="text-[#6B6560] text-lg max-w-2xl mx-auto italic">
@@ -117,7 +117,7 @@ export default function ContactPage() {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full py-4 bg-[#C0A76A] text-white font-oswald text-sm uppercase tracking-[3px] font-bold hover:bg-[#A8914F] transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+                                className="w-full py-4 min-h-[52px] bg-[#C0A76A] text-white font-oswald text-sm uppercase tracking-[3px] font-bold hover:bg-[#A8914F] transition-all flex items-center justify-center gap-3 disabled:opacity-50 tap-scale"
                             >
                                 {loading ? 'Envoi en cours...' : 'Envoyer le Message'}
                                 <Send size={16} />
@@ -176,7 +176,7 @@ function FormGroup({ label, name, type = 'text', required = false }: { label: st
                 type={type}
                 name={name}
                 required={required}
-                className="w-full bg-[#FAFAF8] border border-[#E8E4DC] rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-[#C0A76A] transition-colors"
+                className="w-full bg-[#FAFAF8] border border-[#E8E4DC] rounded-lg px-4 py-3 text-base focus:outline-none focus:border-[#C0A76A] transition-colors min-h-[48px]"
             />
         </div>
     )

@@ -148,7 +148,7 @@ export default function AcademyInfoPage({ params }: { params: Promise<{ locale: 
 
                 {/* SECTION 1: HERO */}
                 {isVisible('hero') && (
-                    <section className="relative py-32 md:py-48 px-6 text-center border-b border-[#E8E4DC] overflow-hidden">
+                    <section className="relative py-16 md:py-32 lg:py-48 px-5 text-center border-b border-[#E8E4DC] overflow-hidden min-h-[500px] flex items-center justify-center">
                         <CmsImageWithOverlay
                             src={t('formations_hero_bg')}
                             alt="Academy Hero"
@@ -177,14 +177,14 @@ export default function AcademyInfoPage({ params }: { params: Promise<{ locale: 
                                 {t('formations_hero_overtitle')}
                             </span>
                             <h1 className="flex flex-col gap-4">
-                                <span className="font-oswald text-5xl md:text-8xl text-[#262626] uppercase leading-[0.9] tracking-tight font-light">
+                                <span className="font-oswald text-3xl md:text-5xl lg:text-7xl xl:text-8xl text-[#262626] uppercase leading-[1] tracking-tight font-light">
                                     {t('formations_hero_title')}
                                 </span>
-                                <span className="font-oswald text-5xl md:text-8xl text-[#C0A76A] uppercase leading-[0.9] tracking-tight font-bold italic">
+                                <span className="font-oswald text-3xl md:text-5xl lg:text-7xl xl:text-8xl text-[#C0A76A] uppercase leading-[1] tracking-tight font-bold italic">
                                     {t('formations_hero_title2')}
                                 </span>
                             </h1>
-                            <p className="text-xl md:text-2xl text-[#6B6560] max-w-2xl mx-auto leading-relaxed font-light">
+                            <p className="text-lg md:text-xl lg:text-2xl text-[#6B6560] max-w-2xl mx-auto leading-relaxed font-light">
                                 {t('formations_hero_subtitle')}
                             </p>
                             <div className="w-20 h-px bg-[#C0A76A] mx-auto mt-12" />
@@ -194,8 +194,8 @@ export default function AcademyInfoPage({ params }: { params: Promise<{ locale: 
 
                 {/* SECTION 2: AVANTAGES */}
                 {isVisible('advantages') && (
-                    <section className="py-32 bg-white container mx-auto px-6">
-                        <div className="text-center mb-20">
+                    <section className="py-16 md:py-32 bg-white container mx-auto px-5 md:px-6">
+                        <div className="text-center mb-12 md:mb-20">
                             <span className="font-oswald text-[11px] text-[#C0A76A] tracking-[4px] uppercase font-bold">
                                 {t('formations_advantages_overtitle')}
                             </span>
@@ -215,7 +215,7 @@ export default function AcademyInfoPage({ params }: { params: Promise<{ locale: 
 
                 {/* SECTION 3: FORMATIONS */}
                 {isVisible('programmes') && (
-                    <section className="py-24 bg-white container mx-auto px-6 space-y-48">
+                    <section className="py-12 md:py-24 bg-white container mx-auto px-5 md:px-6 space-y-24 md:space-y-48">
                         {Array.from({ length: cardCount }).map((_, i) => (
                             <FormationBlock
                                 key={i}
@@ -230,10 +230,10 @@ export default function AcademyInfoPage({ params }: { params: Promise<{ locale: 
 
                 {/* SECTION 4: NOS ENGAGEMENTS */}
                 {isVisible('engagements') && (
-                    <section className="bg-[#F5F0EB] py-32 border-y border-[#E8E4DC]">
-                        <div className="container mx-auto px-6">
-                            <div className="text-center mb-20 space-y-6">
-                                <h2 className="font-oswald text-5xl uppercase text-[#262626] tracking-tight">
+                    <section className="bg-[#F5F0EB] py-16 md:py-32 border-y border-[#E8E4DC]">
+                        <div className="container mx-auto px-5 md:px-6">
+                            <div className="text-center mb-12 md:mb-20 space-y-6">
+                                <h2 className="font-oswald text-3xl md:text-5xl uppercase text-[#262626] tracking-tight">
                                     {t('formations_engagements_title')}
                                 </h2>
                                 <p className="text-[#6B6560] font-oswald text-xs uppercase tracking-[3px]">{t('formations_engagements_subtitle')}</p>
@@ -255,27 +255,27 @@ export default function AcademyInfoPage({ params }: { params: Promise<{ locale: 
 
                 {/* SECTION 5: CTA FINAL */}
                 {isVisible('cta') && (
-                    <section className="bg-white py-40 px-6">
+                    <section className="bg-white py-20 md:py-40 px-5 md:px-6">
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
-                            className="max-w-4xl mx-auto text-center space-y-10"
+                            className="max-w-4xl mx-auto text-center space-y-8 md:space-y-10"
                         >
                             <div className="space-y-4">
-                                <h2 className="font-oswald text-5xl md:text-7xl uppercase text-[#262626] tracking-tight">
+                                <h2 className="font-oswald text-3xl md:text-5xl lg:text-7xl uppercase text-[#262626] tracking-tight">
                                     {t('formations_cta_title')}
                                 </h2>
                                 <h3 className="font-oswald text-2xl text-[#C0A76A] italic font-light tracking-[2px]">
                                     {t('formations_cta_subtitle')}
                                 </h3>
                             </div>
-                            <p className="text-[#6B6560] leading-relaxed text-xl max-w-2xl mx-auto font-light">
+                            <p className="text-[#6B6560] leading-relaxed text-lg lg:text-xl max-w-2xl mx-auto font-light">
                                 {t('formations_cta_desc')}
                             </p>
                             <div className="pt-8 flex flex-col items-center gap-10">
-                                <Link href={t('formations_cta_button_link')}>
-                                    <Button className="h-16 px-16 bg-[#262626] text-white font-oswald text-xs uppercase tracking-[3px] rounded-none hover:bg-[#C0A76A] transition-all duration-500 hover:shadow-2xl">
+                                <Link href={t('formations_cta_button_link')} className="w-full sm:w-auto">
+                                    <Button className="w-full sm:min-w-[300px] h-14 md:h-16 px-16 bg-[#262626] text-white font-oswald text-xs uppercase tracking-[3px] rounded-none hover:bg-[#C0A76A] transition-all duration-500 hover:shadow-2xl tap-scale">
                                         {t('formations_cta_button_text')}
                                     </Button>
                                 </Link>
@@ -367,7 +367,7 @@ function FormationBlock({ index, isEven, content, t }: { index: number, isEven: 
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}
             transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
-            className={`flex flex-col lg:flex-row items-center gap-16 lg:gap-32 ${isEven ? 'lg:flex-row-reverse' : ''} max-w-7xl mx-auto`}
+            className={`flex flex-col lg:flex-row items-center gap-10 md:gap-16 lg:gap-32 ${isEven ? 'lg:flex-row-reverse' : ''} max-w-7xl mx-auto`}
         >
             {/* Image side - Premium Clinical Frame */}
             <div className="w-full lg:w-[55%] relative group">
@@ -405,15 +405,15 @@ function FormationBlock({ index, isEven, content, t }: { index: number, isEven: 
                         )}
                     </div>
 
-                    <h2 className="font-oswald text-4xl md:text-6xl text-[#262626] uppercase leading-[0.95] tracking-tight font-light">
+                    <h2 className="font-oswald text-3xl md:text-4xl lg:text-6xl text-[#262626] uppercase leading-[1.1] md:leading-[0.95] tracking-tight font-light">
                         {title}
                     </h2>
 
                     <div className="flex items-end gap-3 pt-2">
-                        <span className="font-oswald text-4xl md:text-5xl font-bold text-[#C0A76A]">
+                        <span className="font-oswald text-3xl md:text-4xl lg:text-5xl font-bold text-[#C0A76A]">
                             {price}
                         </span>
-                        <span className="font-oswald text-sm text-[#6B6560] mb-2 uppercase tracking-widest">{currency} HT</span>
+                        <span className="font-oswald text-[10px] md:text-sm text-[#6B6560] mb-2 uppercase tracking-widest">{currency} HT</span>
                     </div>
 
                     <p className="text-[#6B6560] leading-relaxed font-light text-lg xl:text-xl">
@@ -468,8 +468,8 @@ function FormationBlock({ index, isEven, content, t }: { index: number, isEven: 
                 </div>
 
                 <div className="pt-8">
-                    <Link href={ctaLink} className="block w-full sm:w-auto">
-                        <Button className="w-full sm:w-auto h-16 px-16 bg-transparent border border-[#262626] text-[#262626] font-oswald text-xs uppercase tracking-[3px] rounded-none hover:bg-[#262626] hover:text-white transition-all duration-500 flex items-center justify-center gap-4 group">
+                    <Link href={ctaLink} className="block w-full">
+                        <Button className="w-full h-14 md:h-16 px-10 md:px-16 bg-transparent border border-[#262626] text-[#262626] font-oswald text-xs uppercase tracking-[3px] rounded-none hover:bg-[#262626] hover:text-white transition-all duration-500 flex items-center justify-center gap-4 group tap-scale">
                             {ctaText}
                             <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
                         </Button>

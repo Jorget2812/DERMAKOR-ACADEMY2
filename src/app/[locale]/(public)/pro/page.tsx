@@ -59,7 +59,7 @@ const REQUEST_OBJECTS = [
 ]
 
 /* ─── Shared input styles ─── */
-const inputClass = "w-full px-4 py-3 text-[15px] text-[#1e1e1e] bg-[#FAFAF8] border border-[#E8E4DC] rounded-lg placeholder:text-[#B0A898] focus:outline-none focus:border-[#C0A76A] focus:ring-2 focus:ring-[#C0A76A]/20 transition-all duration-300"
+const inputClass = "w-full px-4 py-3 text-base text-[#1e1e1e] bg-[#FAFAF8] border border-[#E8E4DC] rounded-lg placeholder:text-[#B0A898] focus:outline-none focus:border-[#C0A76A] focus:ring-2 focus:ring-[#C0A76A]/20 transition-all duration-300 min-h-[48px]"
 const selectClass = `${inputClass} appearance-none cursor-pointer`
 const labelClass = "block text-sm font-medium text-[#1e1e1e] mb-1.5"
 const errorClass = "text-xs text-[#DC3545] mt-1"
@@ -143,14 +143,14 @@ export default function ProfessionalAccessPage() {
     /* ═══════════════════════════════════════════ */
     return (
         <div className="min-h-screen bg-[#FAFAF8]">
-            <div className="max-w-[720px] mx-auto px-4 sm:px-8 py-16 md:py-24">
+            <div className="max-w-[720px] mx-auto px-5 sm:px-8 py-10 md:py-24">
 
                 {/* ── Header ── */}
                 <div className="text-center mb-12">
                     <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-[#C0A76A] to-[#A8914F] shadow-lg shadow-[#C0A76A]/20 mb-6">
                         <GraduationCap className="w-8 h-8 text-white" />
                     </div>
-                    <h1 className="font-oswald text-3xl md:text-4xl uppercase tracking-wider text-[#C0A76A] mb-3">
+                    <h1 className="font-oswald text-2xl md:text-3xl lg:text-4xl uppercase tracking-wider text-[#C0A76A] mb-3">
                         Demande d&apos;Accès Professionnel
                     </h1>
                     <p className="text-[#8A8578] text-sm max-w-md mx-auto leading-relaxed">
@@ -330,7 +330,7 @@ export default function ProfessionalAccessPage() {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full py-4 px-8 text-white text-base font-oswald uppercase tracking-[2px] rounded-lg bg-gradient-to-br from-[#C0A76A] to-[#A8914F] hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#C0A76A]/30 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none transition-all duration-300 flex items-center justify-center gap-3"
+                                className="w-full py-4 px-8 min-h-[52px] text-white text-base font-oswald uppercase tracking-[2px] rounded-lg bg-gradient-to-br from-[#C0A76A] to-[#A8914F] hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#C0A76A]/30 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none transition-all duration-300 flex items-center justify-center gap-3 tap-scale"
                             >
                                 {loading ? (
                                     <>

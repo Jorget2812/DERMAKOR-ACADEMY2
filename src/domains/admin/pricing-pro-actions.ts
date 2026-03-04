@@ -113,12 +113,19 @@ export async function previewPricing(productId: string, yearMonth: string, level
     // For Standard, hardcoded logic exception (Homecare)
     const isHomecare = product.categories?.id && (await checkIfHomecare(product.categories.id))
 
-    // Check rules in DB
+    // Unified logic: PRODUCT > CATEGORY > GLOBAL for all levels (Standard & Premium)
     const productRule = rules?.find(r => r.scope === 'PRODUCT' && r.product_id === productId)
     const categoryRule = rules?.find(r => r.scope === 'CATEGORY' && r.category_id === product.category_id)
     const globalRule = rules?.find(r => r.scope === 'GLOBAL')
 
-    factor = productRule?.resale_factor || categoryRule?.resale_factor || globalRule?.resale_factor || (level === 'STANDARD' && isHomecare ? 2.5 : 1.0)
+    factor = productRule?.resale_factor || categoryRule?.resale_factor || globalRule?.resale_factor
+
+    // Fallback logic for Standard Homecare if no rule exists
+    if (!factor && level === 'STANDARD' && isHomecare) {
+        factor = 2.5
+    }
+
+    if (!factor) factor = 1.0
 
     const firstVariant = product.product_variants?.[0]
     const basePrice = firstVariant?.base_price_cents || 0

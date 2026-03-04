@@ -53,10 +53,10 @@ export default function FAQPage() {
     }))
 
     return (
-        <div className="bg-[#FAFAF8] min-h-screen pt-32 pb-24">
-            <div className="container mx-auto px-6 max-w-4xl">
-                <header className="text-center mb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                    <h1 className="font-oswald text-4xl md:text-6xl font-bold text-[#C0A76A] uppercase tracking-tight mb-6">
+        <div className="bg-[#FAFAF8] min-h-screen pt-8 md:pt-32 pb-16 md:pb-24">
+            <div className="container mx-auto px-5 md:px-6 max-w-4xl">
+                <header className="text-center mb-10 md:mb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                    <h1 className="font-oswald text-3xl md:text-4xl lg:text-6xl font-bold text-[#C0A76A] uppercase tracking-tight mb-4 md:mb-6">
                         {g('faq_title')}
                     </h1>
                     <p className="text-[#6B6560] text-lg max-w-2xl mx-auto italic">
@@ -76,6 +76,16 @@ export default function FAQPage() {
                         />
                     ))}
                 </div>
+
+                {/* Contact CTA */}
+                <div className="mt-10 md:mt-16 text-center">
+                    <p className="text-[#6B6560] text-sm md:text-base mb-4">
+                        Besoin d&apos;aide? Contactez-nous directement.
+                    </p>
+                    <a href="/fr/contact" className="inline-flex items-center justify-center min-h-[52px] px-8 py-3 bg-[#C0A76A] text-white font-oswald text-xs uppercase tracking-[2px] hover:bg-[#A8914F] transition-colors tap-scale">
+                        Nous Contacter
+                    </a>
+                </div>
             </div>
         </div>
     )
@@ -88,10 +98,10 @@ function AccordionItem({ question, answer, isOpen, onClick }: {
         <div className="border-b border-[#E8E4DC] last:border-0">
             <button
                 onClick={onClick}
-                className={`w-full text-left p-6 md:p-8 flex items-center justify-between gap-6 transition-colors
+                className={`w-full text-left p-5 md:p-6 lg:p-8 flex items-center justify-between gap-4 md:gap-6 transition-colors min-h-[56px]
                     ${isOpen ? 'bg-[#FAFAF8]/50' : 'hover:bg-[#FAFAF8]'}`}
             >
-                <span className="font-oswald text-lg md:text-xl font-medium text-[#262626] uppercase leading-tight">
+                <span className="font-oswald text-base md:text-lg lg:text-xl font-medium text-[#262626] uppercase leading-tight">
                     {question}
                 </span>
                 <div className={`w-10 h-10 rounded-full border border-[#C0A76A]/20 flex items-center justify-center shrink-0 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}>
