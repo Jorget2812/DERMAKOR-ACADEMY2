@@ -118,7 +118,7 @@ export async function previewPricing(productId: string, yearMonth: string, level
     const categoryRule = rules?.find(r => r.scope === 'CATEGORY' && r.category_id === product.category_id)
     const globalRule = rules?.find(r => r.scope === 'GLOBAL')
 
-    factor = productRule?.resale_factor || categoryRule?.resale_factor || globalRule?.resale_factor
+    factor = productRule?.resale_factor ?? categoryRule?.resale_factor ?? globalRule?.resale_factor ?? 1.0
 
     // Fallback logic for Standard Homecare if no rule exists
     if (!factor && level === 'STANDARD' && isHomecare) {
