@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
 import { Trash2, Plus, Minus, ShoppingBag } from 'lucide-react'
-import { createCheckoutSession } from '../actions'
 import { useState, useEffect, useMemo } from 'react'
 import { toast } from 'sonner'
 
@@ -28,6 +27,10 @@ export function CartDrawer({ open, setOpen }: { open: boolean, setOpen: (open: b
     }, [])
 
     const total = useMemo(() => items.reduce((acc, item) => acc + item.price * item.qty, 0), [items])
+    // RÈGLE: item.price = prix boutique HT (centimes). TVA 8.1% se calcule DESSUS pour TOUS.
+    const subtotalHT = total / 100
+    const vatAmount = Math.round(subtotalHT * 0.081 * 100) / 100
+    const totalTTC = subtotalHT + vatAmount
 
     async function handleCheckout() {
         if (items.length === 0) return
@@ -97,12 +100,22 @@ export function CartDrawer({ open, setOpen }: { open: boolean, setOpen: (open: b
 
                 <SheetFooter className="border-t pt-6">
                     <div className="w-full space-y-4">
-                        <div className="flex justify-between items-center font-bold text-lg">
-                            <span>Total</span>
-                            <span>{(total / 100).toFixed(2)} CHF</span>
+                        <div className="space-y-2 text-sm">
+                            <div className="flex justify-between text-muted-foreground">
+                                <span>Sous-total (HT)</span>
+                                <span>{subtotalHT.toFixed(2)} CHF</span>
+                            </div>
+                            <div className="flex justify-between text-muted-foreground">
+                                <span>TVA (8.1%)</span>
+                                <span>{vatAmount.toFixed(2)} CHF</span>
+                            </div>
+                            <div className="flex justify-between items-center font-bold text-lg pt-2 border-t">
+                                <span>Total (TTC)</span>
+                                <span>{totalTTC.toFixed(2)} CHF</span>
+                            </div>
                         </div>
                         <p className="text-xs text-muted-foreground text-center">
-                            Frais de port (15.00 CHF) calculés à l'étape suivante.
+                            Frais de port calculés au checkout.
                         </p>
                         <Button
                             className="w-full py-6 text-lg bg-primary hover:bg-accent"

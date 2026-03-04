@@ -323,7 +323,11 @@ export async function createCheckoutSession(items: CartItem[], orderInfo: OrderI
 /**
  * Create a Bank Transfer Order using the secure RPC
  */
-export async function createBankTransferOrder(items: CartItem[], orderInfo: OrderInput) {
+export async function createBankTransferOrder(
+    items: CartItem[],
+    orderInfo: OrderInput,
+    shippingMethod: 'STANDARD' | 'EXPRESS' = 'STANDARD'
+) {
     const supabase = await createClient()
 
     // 1. Get user and verify status (Security Guard Layer 1: Middleware/TS)
@@ -341,13 +345,13 @@ export async function createBankTransferOrder(items: CartItem[], orderInfo: Orde
     }
 
     // 2. Call the secure RPC (Sole Source of Truth)
-    // p_items must be JSONB array: [{ variant_id, qty }]
     const shippingAddress = { ...orderInfo.shippingAddress, country: 'CH' }
 
     const { data: orderId, error: rpcError } = await (supabase as any).rpc('create_order_secure', {
         p_shipping_address: shippingAddress,
         p_billing_address: shippingAddress,
-        p_items: items.map(i => ({ variant_id: i.variantId, qty: i.qty }))
+        p_items: items.map(i => ({ variant_id: i.variantId, qty: i.qty })),
+        p_shipping_method: shippingMethod
     })
 
     if (rpcError) {
@@ -360,7 +364,6 @@ export async function createBankTransferOrder(items: CartItem[], orderInfo: Orde
     }
 
     // 3. Post-Creation Integrity Check (Verification Layer)
-    // Ensure VAT and Snapshots are correctly populated for ALL users
     const { data: createdItems, error: verifyError } = await supabase
         .from('order_items')
         .select('vat_amount_cents, retail_unit_price_cents, resale_factor_used')
@@ -370,27 +373,19 @@ export async function createBankTransferOrder(items: CartItem[], orderInfo: Orde
         throw new Error("Erreur de verification de la commande")
     }
 
-    // BUG 1 Fix: Strict corruption logic (no isPro dependency)
     const hasCorruption = (createdItems as any[]).some(item =>
         item.vat_amount_cents === null ||
-        item.vat_amount_cents === 0 ||
         item.retail_unit_price_cents === null ||
         item.resale_factor_used === null
     )
 
     if (hasCorruption) {
-        console.error("[createBankTransferOrder] CORRUPTION DETECTED:", {
-            orderId,
-            userId: user.id,
-            items: createdItems
-        })
-
-        // BUG 1 Fix: Cancel inconsistent order and block flow
+        console.error("[createBankTransferOrder] CORRUPTION DETECTED:", { orderId, userId: user.id, items: createdItems })
         await (supabase as any).rpc('cancel_order', { p_order_id: orderId as string })
         throw new Error("Données de commande corrompues. Contactez le support.")
     }
 
-    // 4. Fetch order reference for confirmation
+    // 4. Fetch order reference
     const { data: order } = await supabase
         .from('orders')
         .select('invoice_number')

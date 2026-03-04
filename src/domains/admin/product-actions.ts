@@ -275,16 +275,29 @@ export async function updateProductDetails(productId: string, data: any) {
     await ensureAdmin()
     const supabase = await createClient()
 
-    // In original file, it was more specific but we can keep it flexible
-    const { id, created_at, updated_at, product_variants, price, ...updateData } = data
+    // Extract form-only fields that don't belong to the `products` table
+    const {
+        id, created_at, updated_at, product_variants,
+        price, comparePrice, weight_grams,
+        costPerItem, // display-only, not stored
+        ...updateData
+    } = data
 
+    // Update the product row
     const { error } = await supabase.from('products').update(updateData).eq('id', productId)
     if (error) throw new Error(error.message)
 
-    // Handle price sync to variants if provided
-    if (price) {
-        const priceCents = Math.round(parseFloat(price) * 100)
-        await supabase.from('product_variants').update({ base_price_cents: priceCents }).eq('product_id', productId)
+    // Sync price, comparePrice and weight_grams to product_variants
+    const variantUpdate: Record<string, any> = {}
+    if (price) variantUpdate.base_price_cents = Math.round(parseFloat(price) * 100)
+    if (comparePrice !== undefined) {
+        const cp = parseFloat(comparePrice)
+        variantUpdate.compare_at_price_cents = cp > 0 ? Math.round(cp * 100) : null
+    }
+    if (weight_grams !== undefined) variantUpdate.weight_grams = Number(weight_grams) || 0
+
+    if (Object.keys(variantUpdate).length > 0) {
+        await supabase.from('product_variants').update(variantUpdate).eq('product_id', productId)
     }
 
     revalidatePath('/admin/products')

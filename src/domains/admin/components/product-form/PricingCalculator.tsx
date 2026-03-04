@@ -61,6 +61,24 @@ export function PricingCalculator({ register, marginData }: PricingCalculatorPro
                     <Input {...register('costPerItem')} className="h-11 pl-11 bg-[#FDFCFB] border-[#EEEEEE] rounded-xl text-sm font-medium" />
                 </div>
             </div>
+
+            {/* Weight */}
+            <div className="space-y-2 pt-4 border-t border-[#F6F6F6]">
+                <Label className="text-[9px] font-bold uppercase tracking-widest text-primary/20 ml-1">Poids (g)</Label>
+                <div className="relative">
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[9px] font-bold font-mono text-primary/20">g</div>
+                    <Input
+                        {...register('weight_grams', { valueAsNumber: true })}
+                        type="number"
+                        min={0}
+                        max={30000}
+                        step={1}
+                        className="h-11 pl-8 bg-[#FDFCFB] border-[#EEEEEE] rounded-xl text-sm font-medium"
+                        placeholder="250"
+                    />
+                </div>
+                <p className="text-[9px] text-primary/20 ml-1">Utilisé pour calculer les frais de livraison</p>
+            </div>
         </div>
     )
 }

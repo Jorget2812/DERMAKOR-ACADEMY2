@@ -440,6 +440,8 @@ export type Database = {
           variant_id: string | null
           vat_amount_cents: number
           vat_rate: number
+          retail_unit_price_cents: number | null
+          resale_factor_used: number | null
         }
         Insert: {
           base_unit_price_cents: number
@@ -453,6 +455,8 @@ export type Database = {
           variant_id?: string | null
           vat_amount_cents: number
           vat_rate: number
+          retail_unit_price_cents?: number | null
+          resale_factor_used?: number | null
         }
         Update: {
           base_unit_price_cents?: number
@@ -466,6 +470,8 @@ export type Database = {
           variant_id?: string | null
           vat_amount_cents?: number
           vat_rate?: number
+          retail_unit_price_cents?: number | null
+          resale_factor_used?: number | null
         }
         Relationships: [
           {

@@ -1,18 +1,68 @@
 ﻿import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
 import { createAdminClient } from './supabase/admin'
 
+// ---------- EMITTER CONSTANTS (Swiss legal requirements) ----------
+const EMITTER = {
+    name: 'DERMAKOR SWISS Sàrl',
+    subtitle: 'B2B Aesthetic Platform | Switzerland',
+    address: 'Chemin des Champs-Courbes 1',
+    city: '1024 Ecublens VD',
+    country: 'Suisse',
+    ide: 'CHE-466.047.715',
+    email: 'info@dermakorswiss.com',
+    bankHolder: 'DERMAKOR SWISS Sàrl',
+    bank: 'PostFinance',
+    iban: 'CH69 0900 0000 1674 8996 8',
+    paymentTerms: 'Virement bancaire à 2 jours. La livraison est traitée après réception du paiement.',
+    paymentNote: "Sans preuve de paiement, la marchandise ne sera pas expédiée. Merci d'indiquer la référence de la facture.",
+}
+
+// ---------- Swiss number format (apostrophe thousands separator) ----------
+function fmtCHF(amount: number): string {
+    const abs = Math.abs(amount)
+    const formatted = abs.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, "'")
+    return formatted
+}
+
+// ---------- Text wrapping helper for pdf-lib ----------
+function splitTextToLines(text: string, maxChars: number): string[] {
+    if (text.length <= maxChars) return [text]
+    const words = text.split(' ')
+    const lines: string[] = []
+    let current = ''
+    for (const word of words) {
+        if ((current + ' ' + word).trim().length > maxChars) {
+            if (current) lines.push(current.trim())
+            current = word
+        } else {
+            current = (current + ' ' + word).trim()
+        }
+    }
+    if (current) lines.push(current.trim())
+    return lines
+}
+
 export async function generateAndUploadInvoice(orderId: string) {
     const supabase = createAdminClient()
 
-    // 1. Fetch deep order data, invoice settings, and payment settings
-    const [orderRes, invoiceSettingsRes, paymentSettingsRes] = await Promise.all([
+    // 1. Fetch complete order data with Pricing Pro fields
+    const [orderRes, invoiceSettingsRes] = await Promise.all([
         supabase
             .from('orders')
             .select(`
                 *,
-                profiles (*),
+                profiles (level, full_name, email, company_name),
                 order_items (
-                    *,
+                    id,
+                    qty,
+                    base_unit_price_cents,
+                    net_unit_price_cents,
+                    retail_unit_price_cents,
+                    resale_factor_used,
+                    vat_rate,
+                    vat_amount_cents,
+                    gross_unit_price_cents,
+                    line_total_cents,
                     product_variants (
                         sku,
                         products (name)
@@ -25,164 +75,397 @@ export async function generateAndUploadInvoice(orderId: string) {
             .from('invoice_settings' as any)
             .select('*')
             .maybeSingle(),
-        supabase
-            .from('payment_settings' as any)
-            .select('*')
-            .maybeSingle()
     ])
 
     const { data: order, error: fetchError } = orderRes
+    if (fetchError || !order) throw new Error('Erreur lors de la récupération de la commande')
+
     const iSettings = invoiceSettingsRes.data as any
-    const pSettings = paymentSettingsRes.data as any
-
-    if (fetchError || !order) throw new Error("Erreur lors de la récupération de la commande")
-
-    // Generate PDF
-
-    // Determine Company Info (Prioritize DB Settings)
-    const companyName = iSettings?.company_name || "DERMAKOR SWISS"
-    const companyAddress = iSettings?.company_address || ""
-    const companyCity = iSettings?.company_city || ""
-    const companyZip = iSettings?.company_zip || ""
-    const companyEmail = iSettings?.company_email || ""
-    const companyVat = iSettings?.company_vat_number || ""
-
-    // Determine Bank Info (Mirror logic)
-    const bankDetails = (iSettings?.use_payment_data && pSettings) ? {
-        holder: pSettings.account_holder || iSettings.bank_account_holder,
-        name: pSettings.bank_name || iSettings.bank_name,
-        iban: pSettings.iban || iSettings.iban,
-        swift: pSettings.swift_bic || iSettings.swift_bic
-    } : {
-        holder: iSettings?.bank_account_holder,
-        name: iSettings?.bank_name,
-        iban: iSettings?.iban,
-        swift: iSettings?.swift_bic
-    }
-
-    const termsText = iSettings?.terms_text || "Merci pour votre confiance. Paiement sous 10 jours."
-    const invoiceNotes = iSettings?.invoice_notes || ""
-
-    // Profile info
     const profile = (order as any).profiles
 
-    // 2. Create PDF with pdf-lib
+    // ---------- CLIENT DATA from shipping_address JSONB ----------
+    // shipping_address keys: { fullName, street, postalCode, city, country, phone }
+    const shipping = (order.shipping_address || {}) as Record<string, any>
+
+    const customerName =
+        shipping.fullName ||
+        profile?.full_name ||
+        'Client inconnu'
+
+    const customerStreet = shipping.street || ''
+    const customerCity = [shipping.postalCode, shipping.city].filter(Boolean).join(' ')
+    const customerCountry = shipping.country === 'CH' ? 'Suisse' : (shipping.country || 'Suisse')
+    const customerPhone = shipping.phone || profile?.phone_pro || profile?.phone_personal || ''
+    // Filter out placeholder emails (e.g. 'none@dermakor.ch' generated by the system)
+    const rawEmail = profile?.email || ''
+    const customerEmail = rawEmail && !rawEmail.startsWith('none@') && rawEmail.includes('@') ? rawEmail : ''
+    const customerCompany = profile?.company_name || ''
+
+    // ---------- INVOICE NUMBER ----------
+    let invoiceNum = (order as any).invoice_number
+    if (!invoiceNum) {
+        const year = new Date().getFullYear()
+        const shortId = (order as any).id.substring(0, 6).toUpperCase()
+        invoiceNum = `INV-${year}-${shortId}`
+    }
+
+    const orderDate = (order as any).created_at ? new Date((order as any).created_at) : new Date()
+
+    // ---------- BANK / COMPANY SETTINGS (DB overrides hardcoded) ----------
+    const companyName = iSettings?.company_name || EMITTER.name
+    const companyAddress = iSettings?.company_address || EMITTER.address
+    const companyCity = iSettings?.company_city ? `${iSettings.company_zip || ''} ${iSettings.company_city}`.trim() : EMITTER.city
+    const companyIDE = iSettings?.company_vat_number || EMITTER.ide
+    const companyEmail = iSettings?.company_email || EMITTER.email
+
+    const bankIBAN = iSettings?.iban || EMITTER.iban
+    const bankHolder = iSettings?.bank_account_holder || EMITTER.bankHolder
+    const bankName = iSettings?.bank_name || EMITTER.bank
+    const bankSwift = iSettings?.swift_bic || ''
+
+    const paymentTerms = iSettings?.terms_text || EMITTER.paymentTerms
+    const invoiceNotes = iSettings?.invoice_notes || ''
+
+    // ---------- CREATE PDF ----------
     const pdfDoc = await PDFDocument.create()
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica)
     const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold)
     const italicFont = await pdfDoc.embedFont(StandardFonts.HelveticaOblique)
 
-    const page = pdfDoc.addPage([595.28, 841.89]) // A4
-    const { width, height } = page.getSize()
+    const PAGE_W = 595.28
+    const PAGE_H = 841.89
+    const MARGIN = 50
+    const CONTENT_W = PAGE_W - MARGIN * 2
 
-    const gold = rgb(0.78, 0.64, 0.3) // #c8a34c
-    const dark = rgb(0.1, 0.1, 0.1)
-    const gray = rgb(0.4, 0.4, 0.4)
+    const page = pdfDoc.addPage([PAGE_W, PAGE_H])
 
-    // Header Branding
-    page.drawText(companyName.toUpperCase(), { x: 50, y: height - 50, size: 20, font: boldFont, color: gold })
-    page.drawText("B2B Aesthetic Platform | Switzerland", { x: 50, y: height - 70, size: 10, font, color: dark })
-    page.drawLine({ start: { x: 50, y: height - 85 }, end: { x: width - 50, y: height - 85 }, thickness: 1, color: gold })
+    // Colors
+    const gold = rgb(0.753, 0.655, 0.416)   // #C0A76A
+    const dark = rgb(0.149, 0.149, 0.149)    // #262626
+    const gray = rgb(0.42, 0.396, 0.376)     // #6B6560
+    const lightGray = rgb(0.96, 0.98, 0.972) // #F5F8F7 — table row alt
+    const white = rgb(1, 1, 1)
 
-    // Invoice Header Info
-    const invoiceNum = order.invoice_number || `ORD-${order.id.substring(0, 8).toUpperCase()}`
-    const orderDate = order.created_at ? new Date(order.created_at) : new Date()
+    let y = PAGE_H - MARGIN
 
-    page.drawText(`FACTURE: ${invoiceNum}`, { x: 50, y: height - 110, size: 14, font: boldFont })
-    page.drawText(`Date: ${orderDate.toLocaleDateString('fr-CH')}`, { x: 50, y: height - 125, size: 9, font })
-    page.drawText(`Ref: #${order.id.substring(0, 8).toUpperCase()}`, { x: 50, y: height - 135, size: 9, font })
+    // =============================================
+    // SECTION 1 — EMITTER HEADER
+    // =============================================
+    page.drawText(companyName.toUpperCase(), {
+        x: MARGIN, y, size: 16, font: boldFont, color: gold
+    })
+    y -= 16
 
-    // Customer Info
-    page.drawText("DESTINATAIRE:", { x: 350, y: height - 110, size: 10, font: boldFont })
-    page.drawText(profile?.full_name || '', { x: 350, y: height - 125, size: 9, font })
-    page.drawText(profile?.company_name || '', { x: 350, y: height - 135, size: 9, font })
-    const shipping = order.shipping_address as any
-    page.drawText(`${shipping?.street || ''}`, { x: 350, y: height - 145, size: 9, font })
-    page.drawText(`${shipping?.postalCode || ''} ${shipping?.city || ''}, ${shipping?.country || ''}`, { x: 350, y: height - 155, size: 9, font })
+    page.drawText(EMITTER.subtitle, {
+        x: MARGIN, y, size: 9, font, color: dark
+    })
+    y -= 12
 
-    // Table Header
-    let currentY = height - 200
-    page.drawRectangle({ x: 50, y: currentY - 5, width: width - 100, height: 20, color: gold })
-    page.drawText("Produit", { x: 60, y: currentY, size: 9, font: boldFont, color: rgb(1, 1, 1) })
-    page.drawText("Qté", { x: 300, y: currentY, size: 9, font: boldFont, color: rgb(1, 1, 1) })
-    page.drawText("Unit TTC (CHF)", { x: 370, y: currentY, size: 9, font: boldFont, color: rgb(1, 1, 1) })
-    page.drawText("Total TTC (CHF)", { x: 480, y: currentY, size: 9, font: boldFont, color: rgb(1, 1, 1) })
+    page.drawText(companyAddress, {
+        x: MARGIN, y, size: 8.5, font, color: gray
+    })
+    y -= 11
+    page.drawText(companyCity + ', Suisse', {
+        x: MARGIN, y, size: 8.5, font, color: gray
+    })
+    y -= 11
+    page.drawText(`IDE: ${companyIDE}`, {
+        x: MARGIN, y, size: 8.5, font, color: gray
+    })
+    y -= 11
+    page.drawText(companyEmail, {
+        x: MARGIN, y, size: 8.5, font, color: gray
+    })
+    y -= 16
 
-    // Table Body
-    currentY -= 25
-    for (const item of order.order_items) {
-        const name = (item.product_variants?.products?.name || item.product_variants?.sku || 'Produit').substring(0, 40)
-        // Definitive Rule: Order uses snapshot. We display gross_unit_price (TTC) in these columns.
-        const unitPriceTTC = item.gross_unit_price_cents / 100
-        const lineTotalTTC = item.line_total_cents / 100
+    // Gold separator
+    page.drawLine({
+        start: { x: MARGIN, y },
+        end: { x: PAGE_W - MARGIN, y },
+        thickness: 1.5, color: gold
+    })
+    y -= 20
 
-        page.drawText(name, { x: 60, y: currentY, size: 8, font })
-        page.drawText(item.qty.toString(), { x: 305, y: currentY, size: 8, font })
-        page.drawText(unitPriceTTC.toFixed(2), { x: 385, y: currentY, size: 8, font })
-        page.drawText(lineTotalTTC.toFixed(2), { x: 485, y: currentY, size: 8, font: boldFont })
+    // =============================================
+    // SECTION 2 — INVOICE INFO + DESTINATAIRE
+    // =============================================
+    const startOfSection2 = y
 
-        currentY -= 15
-        if (currentY < 150) break
+    // LEFT: Invoice details
+    page.drawText(`FACTURE: ${invoiceNum}`, {
+        x: MARGIN, y, size: 13, font: boldFont, color: dark
+    })
+    y -= 16
+    page.drawText(`Date: ${orderDate.toLocaleDateString('fr-CH')}`, {
+        x: MARGIN, y, size: 9, font, color: dark
+    })
+    y -= 12
+    page.drawText(`Réf: #${(order as any).id.substring(0, 8).toUpperCase()}`, {
+        x: MARGIN, y, size: 9, font, color: gray
+    })
+    y -= 12
+
+    // RIGHT: Destinataire box
+    const destX = 320
+    let destY = startOfSection2
+
+    page.drawText('DESTINATAIRE:', {
+        x: destX, y: destY, size: 9, font: boldFont, color: dark
+    })
+    destY -= 13
+
+    page.drawText(customerName, {
+        x: destX, y: destY, size: 9, font: boldFont, color: dark
+    })
+    destY -= 11
+
+    if (customerCompany) {
+        page.drawText(customerCompany, {
+            x: destX, y: destY, size: 8.5, font, color: dark
+        })
+        destY -= 11
     }
 
-    // Totals Section
-    currentY -= 20
-    page.drawLine({ start: { x: 350, y: currentY }, end: { x: width - 50, y: currentY }, thickness: 0.5, color: dark })
+    if (customerStreet) {
+        page.drawText(customerStreet, {
+            x: destX, y: destY, size: 8.5, font, color: dark
+        })
+        destY -= 11
+    }
 
-    currentY -= 15
-    page.drawText("Sous-total (net):", { x: 350, y: currentY, size: 9, font })
-    page.drawText(`${(order.total_base_cents / 100).toFixed(2)} CHF`, { x: 485, y: currentY, size: 9, font })
+    if (customerCity) {
+        page.drawText(customerCity, {
+            x: destX, y: destY, size: 8.5, font, color: dark
+        })
+        destY -= 11
+    }
 
-    currentY -= 12
-    page.drawText("TVA (8.1%):", { x: 350, y: currentY, size: 9, font })
-    page.drawText(`${(order.vat_total_cents / 100).toFixed(2)} CHF`, { x: 485, y: currentY, size: 9, font })
+    page.drawText(customerCountry, {
+        x: destX, y: destY, size: 8.5, font, color: dark
+    })
+    destY -= 11
 
-    currentY -= 20
-    page.drawText("TOTAL À PAYER (TTC):", { x: 350, y: currentY, size: 11, font: boldFont, color: gold })
-    page.drawText(`${(order.total_final_cents / 100).toFixed(2)} CHF`, { x: 485, y: currentY, size: 11, font: boldFont, color: gold })
+    if (customerPhone) {
+        page.drawText(`Tél: ${customerPhone}`, {
+            x: destX, y: destY, size: 8, font, color: gray
+        })
+        destY -= 11
+    }
 
-    // Bank Details Section
-    if (bankDetails.iban) {
-        currentY -= 50
-        page.drawText("DÉTAILS DU RÈGLEMENT:", { x: 50, y: currentY, size: 9, font: boldFont })
-        currentY -= 12
-        page.drawText(`Titulaire: ${bankDetails.holder || companyName}`, { x: 50, y: currentY, size: 8, font })
-        currentY -= 10
-        page.drawText(`Banque: ${bankDetails.name || ''}`, { x: 50, y: currentY, size: 8, font })
-        currentY -= 10
-        page.drawText(`IBAN: ${bankDetails.iban}`, { x: 50, y: currentY, size: 8, font })
-        if (bankDetails.swift) {
-            currentY -= 10
-            page.drawText(`SWIFT/BIC: ${bankDetails.swift}`, { x: 50, y: currentY, size: 8, font })
+    if (customerEmail) {
+        page.drawText(`Email: ${customerEmail}`, {
+            x: destX, y: destY, size: 8, font, color: gray
+        })
+        destY -= 11
+    }
+
+    // Move y to below both columns
+    y = Math.min(y, destY) - 20
+
+    // Separator
+    page.drawLine({
+        start: { x: MARGIN, y },
+        end: { x: PAGE_W - MARGIN, y },
+        thickness: 0.5, color: gold
+    })
+    y -= 18
+
+    // =============================================
+    // SECTION 3 — PRODUCTS TABLE
+    // Swiss format: Produit | Qté | P.U. HT (CHF) | Total HT (CHF)
+    // =============================================
+    const COL = {
+        produit: MARGIN,
+        qty: 330,
+        pu: 420,     // right-edge of P.U. column
+        total: 545   // right-edge of Total column = right margin
+    }
+
+    // Helper: draw text right-aligned at given right-edge X
+    const drawRight = (text: string, rightEdgeX: number, yPos: number, f: any, sz: number, col: any) => {
+        const w = f.widthOfTextAtSize(text, sz)
+        page.drawText(text, { x: rightEdgeX - w, y: yPos, size: sz, font: f, color: col })
+    }
+
+    // Table header
+    page.drawRectangle({
+        x: MARGIN, y: y - 4, width: CONTENT_W, height: 18,
+        color: gold
+    })
+    page.drawText('Produit', { x: COL.produit + 4, y, size: 8.5, font: boldFont, color: white })
+    page.drawText('Qté', { x: COL.qty, y, size: 8.5, font: boldFont, color: white })
+    drawRight('P.U. HT (CHF)', COL.pu, y, boldFont, 8.5, white)
+    drawRight('Total HT (CHF)', COL.total, y, boldFont, 8.5, white)
+    y -= 22
+
+    // Table rows
+    let sousTotalHT = 0
+    const items = (order as any).order_items || []
+
+    for (let i = 0; i < items.length; i++) {
+        const item = items[i]
+        const productName = item.product_variants?.products?.name || item.product_variants?.sku || 'Produit'
+
+        // Pricing Pro logic: net_unit_price_cents is already the adjusted price
+        const netUnitHT = (item.net_unit_price_cents || 0) / 100
+        const lineTotalHT = netUnitHT * item.qty
+        sousTotalHT += lineTotalHT
+
+        // Alternate row background
+        if (i % 2 === 0) {
+            page.drawRectangle({
+                x: MARGIN, y: y - 4, width: CONTENT_W, height: 15,
+                color: lightGray
+            })
         }
-        currentY -= 15
-        page.drawText(`RÉFÉRENCE À INDIQUER: ${invoiceNum}`, { x: 50, y: currentY, size: 9, font: boldFont })
-    }
 
-    // Terms / Notes Section
-    if (termsText || invoiceNotes) {
-        currentY -= 40
-        if (invoiceNotes) {
-            page.drawText("NOTES:", { x: 50, y: currentY, size: 8, font: boldFont, color: gray })
-            currentY -= 10
-            page.drawText(invoiceNotes.substring(0, 500), { x: 50, y: currentY, size: 7, font: italicFont, color: gray })
-            currentY -= 20
+        // Draw product name with wrapping support
+        const nameLines = splitTextToLines(productName, 52)
+        for (let li = 0; li < nameLines.length; li++) {
+            page.drawText(nameLines[li], {
+                x: COL.produit + 4,
+                y: y - li * 10,
+                size: 8, font, color: dark
+            })
         }
-        page.drawText(termsText.replace("{invoice_number}", invoiceNum), { x: 50, y: currentY, size: 8, font, color: dark })
+
+        page.drawText(item.qty.toString(), { x: COL.qty + 4, y, size: 8, font, color: dark })
+        drawRight(fmtCHF(netUnitHT), COL.pu, y, font, 8, dark)
+        drawRight(fmtCHF(lineTotalHT), COL.total, y, boldFont, 8, dark)
+
+        // Advance by line height (extra lines for wrapped names)
+        y -= Math.max(nameLines.length * 10, 15) + 2
+        if (y < 180) break // page overflow guard
     }
 
-    // Standard Footer
-    const companyInfoStr = `${companyName} ${companyVat ? `| IDE: ${companyVat}` : ''} | ${companyEmail || ''}`
-    page.drawText(companyInfoStr, { x: width / 2 - 100, y: 30, size: 7, font, color: gray, opacity: 0.8 })
+    // Table bottom border
+    y -= 6
+    page.drawLine({
+        start: { x: MARGIN, y },
+        end: { x: PAGE_W - MARGIN, y },
+        thickness: 0.5, color: gold
+    })
+    y -= 18
 
-    if (companyAddress) {
-        const addrStr = `${companyAddress}, ${companyZip} ${companyCity}`
-        page.drawText(addrStr, { x: width / 2 - 100, y: 20, size: 7, font, color: gray, opacity: 0.8 })
+    // TOTALS — right-edge of amounts column
+    const TOTALS_X_LABEL = 320
+    const TOTALS_RIGHT_EDGE = 545  // same as COL.total — all decimals align here
+
+    const drawTotalLine = (label: string, value: string, bold = false, color = dark, size = 9) => {
+        const f = bold ? boldFont : font
+        page.drawText(label, { x: TOTALS_X_LABEL, y, size, font: f, color })
+        // Right-align value so right edge is always at TOTALS_RIGHT_EDGE
+        const valW = f.widthOfTextAtSize(value, size)
+        page.drawText(value, { x: TOTALS_RIGHT_EDGE - valW, y, size, font: f, color })
+        y -= size + 5
     }
 
-    // 3. Save and Upload
+    // Sous-total HT
+    drawTotalLine('Sous-total Net (HT):', `${fmtCHF(sousTotalHT)} CHF`)
+
+    // TVA 8.1% — applies UNIVERSALLY to ALL clients (NONE, STANDARD, PREMIUM)
+    const tvaAmount = ((order as any).vat_total_cents || 0) / 100
+    drawTotalLine('TVA 8.1%:', `${fmtCHF(tvaAmount)} CHF`)
+
+    // Livraison (exonérée de TVA en Suisse si facturée au coût)
+    const shippingPriceCents = (order as any).shipping_price_cents || 0
+    if (shippingPriceCents > 0) {
+        const shippingMethod = (order as any).shipping_method || 'STANDARD'
+        const shippingLabel = shippingMethod === 'EXPRESS' ? 'Livraison Express:' : 'Livraison Standard:'
+        drawTotalLine(shippingLabel, `${fmtCHF(shippingPriceCents / 100)} CHF`)
+    }
+
+    // Separator before grand total
+    page.drawLine({
+        start: { x: TOTALS_X_LABEL, y: y + 4 },
+        end: { x: PAGE_W - MARGIN, y: y + 4 },
+        thickness: 0.5, color: dark
+    })
+    y -= 8
+
+    const totalTTC = ((order as any).total_final_cents || 0) / 100
+    drawTotalLine('TOTAL À PAYER (TTC):', `${fmtCHF(totalTTC)} CHF`, true, gold, 11)
+
+    y -= 20
+
+    // =============================================
+    // SECTION 5 — BANK DETAILS
+    // =============================================
+    page.drawLine({
+        start: { x: MARGIN, y },
+        end: { x: PAGE_W - MARGIN, y },
+        thickness: 0.5, color: gold
+    })
+    y -= 16
+
+    page.drawText('DÉTAILS DU RÈGLEMENT:', { x: MARGIN, y, size: 9, font: boldFont, color: dark })
+    y -= 13
+
+    if (bankHolder) {
+        page.drawText(`Titulaire: ${bankHolder}`, { x: MARGIN, y, size: 8, font, color: dark })
+        y -= 11
+    }
+    if (bankName) {
+        page.drawText(`Banque: ${bankName}`, { x: MARGIN, y, size: 8, font, color: dark })
+        y -= 11
+    }
+    if (bankIBAN) {
+        page.drawText(`IBAN: ${bankIBAN}`, { x: MARGIN, y, size: 8, font, color: dark })
+        y -= 11
+    }
+    if (bankSwift) {
+        page.drawText(`SWIFT/BIC: ${bankSwift}`, { x: MARGIN, y, size: 8, font, color: dark })
+        y -= 11
+    }
+
+    y -= 6
+    page.drawText(`RÉFÉRENCE À INDIQUER: ${invoiceNum}`, { x: MARGIN, y, size: 9, font: boldFont, color: dark })
+    y -= 18
+
+    // Payment conditions
+    page.drawText(paymentTerms.replace('{invoice_number}', invoiceNum), {
+        x: MARGIN, y, size: 8, font: italicFont, color: gray
+    })
+    y -= 11
+    page.drawText(EMITTER.paymentNote, {
+        x: MARGIN, y, size: 8, font: italicFont, color: gray, maxWidth: CONTENT_W
+    })
+    y -= 11
+
+    if (invoiceNotes) {
+        y -= 10
+        page.drawText('NOTE:', { x: MARGIN, y, size: 8, font: boldFont, color: gray })
+        y -= 11
+        page.drawText(invoiceNotes.substring(0, 120), { x: MARGIN, y, size: 7, font: italicFont, color: gray })
+        y -= 11
+    }
+
+    // =============================================
+    // FOOTER
+    // =============================================
+    page.drawLine({
+        start: { x: MARGIN, y: 45 },
+        end: { x: PAGE_W - MARGIN, y: 45 },
+        thickness: 0.5, color: gold
+    })
+    page.drawText(
+        `${companyName} | IDE: ${companyIDE} | ${companyEmail}`,
+        { x: MARGIN, y: 32, size: 7, font, color: gray }
+    )
+    page.drawText(
+        `${companyAddress}, ${companyCity}, Suisse`,
+        { x: MARGIN, y: 22, size: 7, font, color: gray }
+    )
+
+    // =============================================
+    // 3. UPLOAD PDF
+    // =============================================
     const pdfBytes = await pdfDoc.save()
-    const fileName = `${orderId}_invoice.pdf`
+    // Timestamp-based filename: forces fresh cache on each regeneration.
+    // Even if invoice_pdf_path already existed, the new path ensures the
+    // latest PDF code (alignment, email filter, etc.) is always used.
+    const timestamp = Date.now()
+    const fileName = `${orderId}_invoice_${timestamp}.pdf`
     const filePath = `invoices/${fileName}`
 
     const { error: uploadError } = await supabase.storage
@@ -194,16 +477,14 @@ export async function generateAndUploadInvoice(orderId: string) {
 
     if (uploadError) throw new Error(`Upload Error: ${uploadError.message}`)
 
-    // 4. Update order row with snapshot data if missing
+    // 4. Update order with invoice metadata
     const updateData: any = {
         invoice_pdf_path: filePath,
         invoice_generated_at: new Date().toISOString()
     }
 
-    if (!order.invoice_number) {
-        const year = new Date().getFullYear()
-        const shortId = order.id.substring(0, 6).toUpperCase()
-        updateData.invoice_number = `INV-${year}-${shortId}`
+    if (!(order as any).invoice_number) {
+        updateData.invoice_number = invoiceNum
     }
 
     await supabase.from('orders').update(updateData).eq('id', orderId)
@@ -211,6 +492,6 @@ export async function generateAndUploadInvoice(orderId: string) {
     return {
         success: true,
         path: filePath,
-        invoice_number: order.invoice_number || updateData.invoice_number
+        invoice_number: (order as any).invoice_number || invoiceNum
     }
 }

@@ -48,7 +48,8 @@ const productSchema = z.object({
     badge_text: z.string().nullable(),
     badge_color: z.string(),
     badge_secondary_text: z.string().nullable(),
-    show_rating: z.boolean()
+    show_rating: z.boolean(),
+    weight_grams: z.number().min(0).max(30000).optional()
 })
 
 type ProductFormValues = z.infer<typeof productSchema>
@@ -101,7 +102,8 @@ export function ProductEditForm({ product, categories }: ProductEditFormProps) {
             badge_text: product.badge_text || null,
             badge_color: product.badge_color || '#C0A76A',
             badge_secondary_text: product.badge_secondary_text || null,
-            show_rating: product.show_rating ?? true
+            show_rating: product.show_rating ?? true,
+            weight_grams: Number(primaryVariant.weight_grams ?? 0)
         }
     })
 
@@ -133,7 +135,8 @@ export function ProductEditForm({ product, categories }: ProductEditFormProps) {
                 ...values,
                 category_id: values.category_id === 'none' ? null : values.category_id,
                 images: images,
-                tags: values.tags ? values.tags.split(',').map(t => t.trim()) : []
+                tags: values.tags ? values.tags.split(',').map(t => t.trim()) : [],
+                weight_grams: values.weight_grams ?? 0
             })
             toast.success("Changes saved successfully")
             router.push('/admin/products')

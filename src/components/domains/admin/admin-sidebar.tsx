@@ -17,7 +17,8 @@ import {
     ChevronRight,
     ShieldAlert,
     FolderOpen,
-    FileText
+    FileText,
+    Truck
 } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 
@@ -35,6 +36,7 @@ const adminNavItems = [
     },
     { name: 'Ventes', href: '/admin/orders', icon: ShoppingBag },
     { name: 'Pricing Pro', href: '/admin/pricing-pro', icon: Settings },
+    { name: 'Livraison', href: '/admin/shipping', icon: Truck },
     { name: 'Academy Portal', href: '/admin/academy', icon: GraduationCap },
     { name: 'Vérifications', href: '/admin/verifications', icon: ShieldAlert },
     { name: 'Professionnels', href: '/admin/users', icon: Users },

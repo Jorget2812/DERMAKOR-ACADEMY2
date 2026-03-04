@@ -5,9 +5,9 @@ import { Button } from "@/components/ui/button"
 import { FileText, Package, Calendar } from "lucide-react"
 import { Link } from '@/navigation'
 import { redirect } from 'next/navigation'
-
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
+import { ClientInvoiceButton } from '@/domains/commerce/components/ClientInvoiceButton'
 
 export default async function UserOrdersPage() {
     const supabase = await createClient()
@@ -23,19 +23,7 @@ export default async function UserOrdersPage() {
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
 
-    const rawOrders = data as any[] || []
-
-    // Pre-generar Signed URLs para facturas existentes
-    const orders = await Promise.all(rawOrders.map(async (order) => {
-        let signedUrl = null
-        if (order.invoice_pdf_path && order.status !== 'PENDING') {
-            const { data: urlData } = await supabase.storage
-                .from('invoices')
-                .createSignedUrl(order.invoice_pdf_path, 3600)
-            signedUrl = urlData?.signedUrl
-        }
-        return { ...order, signedUrl }
-    }))
+    const orders = (data as any[]) || []
 
     return (
         <div className="space-y-8">
@@ -76,19 +64,18 @@ export default async function UserOrdersPage() {
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-3">
-                                    {order.signedUrl ? (
-                                        <a href={order.signedUrl} target="_blank" rel="noopener noreferrer">
-                                            <Button variant="outline" size="sm" className="gap-2 border-primary/20 hover:border-primary/50 text-xs">
-                                                <FileText size={14} className="text-primary" /> Facture PDF
-                                            </Button>
-                                        </a>
+                                    {order.status === 'PAID' ? (
+                                        <ClientInvoiceButton
+                                            orderId={order.id}
+                                            invoicePdfPath={(order as any).invoice_pdf_path}
+                                        />
                                     ) : (
                                         <Button
                                             variant="outline"
                                             size="sm"
-                                            className="gap-2 opacity-50 cursor-not-allowed text-xs"
+                                            className="gap-2 opacity-40 cursor-not-allowed text-xs"
                                             disabled
-                                            title={order.status === 'PENDING' ? "Disponible après réception du paiement" : "Facture en cours de génération"}
+                                            title={order.status === 'PENDING' ? "Disponible après réception du paiement" : "Non disponible"}
                                         >
                                             <FileText size={14} /> Facture PDF
                                         </Button>

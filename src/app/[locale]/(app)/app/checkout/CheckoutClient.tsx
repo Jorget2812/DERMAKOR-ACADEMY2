@@ -4,6 +4,7 @@ import { useCart } from '@/domains/commerce/store'
 import { CheckoutFlow } from '@/domains/commerce/components/CheckoutFlow'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
+import { getAvailableShippingRates, ShippingOption } from '@/domains/commerce/shipping-actions'
 
 interface CheckoutClientProps {
     bankDetails: any
@@ -14,14 +15,29 @@ export function CheckoutFlowWrapper({ bankDetails }: CheckoutClientProps) {
     const clearCart = useCart(state => state.clearCart)
     const router = useRouter()
     const [mounted, setMounted] = useState(false)
+    const [shippingOptions, setShippingOptions] = useState<{
+        standard: ShippingOption | null
+        express: ShippingOption | null
+    }>({ standard: null, express: null })
 
     useEffect(() => {
         setMounted(true)
     }, [])
 
-    const totalCHF = items.reduce((acc, item: any) => acc + (item.price * item.qty), 0) / 100
-    const subtotal = totalCHF / 1.081
-    const vatAmount = totalCHF - subtotal
+    // RÈGLE: item.price = prix boutique (HT) en centimes
+    // TVA 8.1% se calcule OVER le prix boutique, pour TOUS les niveaux sans exception
+    const subtotal = items.reduce((acc, item: any) => acc + (item.price * item.qty), 0) / 100
+    const vatAmount = Math.round(subtotal * 0.081 * 100) / 100
+
+    // Calculate total weight from cart items (item may have weightGrams if available)
+    const totalWeightGrams = items.reduce((acc, item: any) => acc + ((item.weightGrams ?? 0) * item.qty), 0)
+
+    // Fetch shipping rates when mounted
+    useEffect(() => {
+        if (!mounted) return
+        const safeWeight = Math.max(totalWeightGrams, 1)
+        getAvailableShippingRates(safeWeight).then(setShippingOptions).catch(console.error)
+    }, [mounted, totalWeightGrams])
 
     const handleComplete = () => {
         clearCart()
@@ -56,9 +72,10 @@ export function CheckoutFlowWrapper({ bankDetails }: CheckoutClientProps) {
             items={items}
             subtotal={subtotal}
             vatAmount={vatAmount}
-            totalCHF={totalCHF}
             onComplete={handleComplete}
             bankDetails={bankDetails}
+            shippingOptions={shippingOptions}
+            totalWeightGrams={totalWeightGrams}
         />
     )
 }
