@@ -26,7 +26,26 @@ function SetPasswordInner() {
     const [error, setError] = useState('')
     const [done, setDone] = useState(false)
 
-    // No token in URL → invalid link
+    /* ── 1. Success State (Top Priority) ── */
+    if (done) {
+        return (
+            <div className="min-h-screen bg-[#FAFAF8] flex items-center justify-center px-4">
+                <div className="max-w-md w-full text-center bg-white rounded-2xl border border-[#E8E4DC] shadow-[0_4px_24px_rgba(0,0,0,0.06)] p-10">
+                    <div className="relative mx-auto w-20 h-20 mb-8">
+                        <div className="absolute inset-0 rounded-full bg-[#C0A76A]/10 animate-ping" />
+                        <div className="relative w-20 h-20 rounded-full bg-gradient-to-br from-[#C0A76A] to-[#A8914F] flex items-center justify-center shadow-lg shadow-[#C0A76A]/30">
+                            <CheckCircle2 className="w-10 h-10 text-white" />
+                        </div>
+                    </div>
+                    <h2 className="text-2xl font-bold text-[#1e1e1e] mb-3">Mot de passe créé !</h2>
+                    <p className="text-[#8A8578] text-sm mb-4">Redirection vers la page de connexion...</p>
+                    <Loader2 className="w-5 h-5 animate-spin text-[#C0A76A] mx-auto" />
+                </div>
+            </div>
+        )
+    }
+
+    // ── 2. Token Validation ──
     if (!token) {
         return <InvalidLink message="Aucun token trouvé dans ce lien." />
     }
@@ -43,6 +62,7 @@ function SetPasswordInner() {
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault()
+        if (loading || done) return
         setError('')
 
         if (password.length < 8) {
@@ -65,35 +85,20 @@ function SetPasswordInner() {
 
             if (result.error) {
                 setError(result.error)
+                setLoading(false) // Important to unset loading if error
                 return
             }
 
-            setDone(true)
-            setTimeout(() => router.push('/fr/login'), 3000)
-        } catch {
+            if (result.success) {
+                setDone(true)
+                setLoading(false)
+                setTimeout(() => router.push('/fr/login'), 3000)
+                return // Exit early
+            }
+        } catch (err) {
             setError('Erreur réseau. Veuillez réessayer.')
-        } finally {
             setLoading(false)
         }
-    }
-
-    /* ── Success ── */
-    if (done) {
-        return (
-            <div className="min-h-screen bg-[#FAFAF8] flex items-center justify-center px-4">
-                <div className="max-w-md w-full text-center bg-white rounded-2xl border border-[#E8E4DC] shadow-[0_4px_24px_rgba(0,0,0,0.06)] p-10">
-                    <div className="relative mx-auto w-20 h-20 mb-8">
-                        <div className="absolute inset-0 rounded-full bg-[#C0A76A]/10 animate-ping" />
-                        <div className="relative w-20 h-20 rounded-full bg-gradient-to-br from-[#C0A76A] to-[#A8914F] flex items-center justify-center shadow-lg shadow-[#C0A76A]/30">
-                            <CheckCircle2 className="w-10 h-10 text-white" />
-                        </div>
-                    </div>
-                    <h2 className="text-2xl font-bold text-[#1e1e1e] mb-3">Mot de passe créé !</h2>
-                    <p className="text-[#8A8578] text-sm mb-4">Redirection vers la page de connexion...</p>
-                    <Loader2 className="w-5 h-5 animate-spin text-[#C0A76A] mx-auto" />
-                </div>
-            </div>
-        )
     }
 
     /* ── Form ── */
