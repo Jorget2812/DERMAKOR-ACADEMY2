@@ -238,20 +238,21 @@ export async function approveVerification(requestId: string, initialLevel: 'STAN
 
     if (fetchError || !request) throw new Error("Demande introuvable")
 
-    // 2. Invite user via Auth
+    // 2. Generate invite link WITHOUT sending via Supabase
+    //    (Supabase email = vulnerable to Gmail prefetch consuming the OTP)
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://dermakor-academy.vercel.app'
-    const { data: authUser, error: authError } = await adminClient.auth.admin.inviteUserByEmail(request.email, {
-        // Point DIRECTLY to the client-side page so the browser Supabase SDK
-        // can detect the #access_token hash fragment (servers never receive hashes).
-        redirectTo: `${siteUrl}/fr/auth/set-password`,
-        data: { full_name: request.full_name }
+    const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
+        type: 'invite',
+        email: request.email,
+        options: {
+            redirectTo: `${siteUrl}/fr/auth/set-password`,
+            data: { full_name: request.full_name }
+        }
     })
 
-
-    if (authError) {
-        // If user already exists, we just link it
-        if (authError.message.toLowerCase().includes('already registered') || authError.message.toLowerCase().includes('already exists')) {
-            // Find user id by email from profiles (since it's a B2B app, profiles should exist if they registered before)
+    if (linkError) {
+        // If user already exists, update profile directly
+        if (linkError.message.toLowerCase().includes('already registered') || linkError.message.toLowerCase().includes('already exists')) {
             const { data: existingProfile } = await supabase
                 .from('profiles')
                 .select('id')
@@ -260,13 +261,24 @@ export async function approveVerification(requestId: string, initialLevel: 'STAN
 
             if (existingProfile) {
                 await updateProfileAndRequest(requestId, existingProfile.id, request, initialLevel, adminUser.id)
-                return { success: true, note: "User already existed, linked profile." }
+                return { success: true, note: "User already existed, profile linked." }
             }
         }
-        throw new Error(`Auth Error: ${authError.message}`)
+        throw new Error(`Link generation error: ${linkError.message}`)
     }
 
-    await updateProfileAndRequest(requestId, authUser.user.id, request, initialLevel, adminUser.id)
+    const userId = linkData.user.id
+    const inviteLink = linkData.properties.action_link
+
+    // 3. Send invitation email via our own SMTP (Gmail-prefetch resistant)
+    const { sendInvitationEmail } = await import('@/lib/email-service')
+    await sendInvitationEmail({
+        to: request.email,
+        fullName: request.full_name,
+        inviteLink,
+    })
+
+    await updateProfileAndRequest(requestId, userId, request, initialLevel, adminUser.id)
 
     await auditLog('APPROVE_VERIFICATION', 'verification_requests', requestId, { email: request.email })
 
@@ -274,6 +286,7 @@ export async function approveVerification(requestId: string, initialLevel: 'STAN
     revalidatePath('/admin/verifications')
     return { success: true }
 }
+
 
 async function updateProfileAndRequest(requestId: string, userId: string, request: any, initialLevel: string, adminId: string) {
     const supabase = await createClient()
