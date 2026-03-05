@@ -1,11 +1,29 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { CheckCircle2, Loader2, Lock, Eye, EyeOff } from 'lucide-react'
 
-export default function SetPasswordPage() {
+/**
+ * Set Password page for invited professionals.
+ *
+ * Supabase invitation emails redirect here with one of two token delivery methods:
+ *
+ * 1. IMPLICIT FLOW (most common):
+ *    URL: /fr/auth/set-password#access_token=xxx&refresh_token=yyy&type=invite
+ *    → The hash fragment is ONLY readable by the browser.
+ *    → The Supabase JS client detects the hash automatically and fires onAuthStateChange.
+ *
+ * 2. PKCE FLOW:
+ *    URL: /fr/auth/set-password?code=xxx
+ *    → We call exchangeCodeForSession(code) to establish the session.
+ *
+ * This page handles BOTH flows.
+ */
+
+// Inner component uses useSearchParams — must be wrapped in Suspense
+function SetPasswordInner() {
     const [password, setPassword] = useState('')
     const [confirmPassword, setConfirmPassword] = useState('')
     const [showPassword, setShowPassword] = useState(false)
@@ -16,30 +34,50 @@ export default function SetPasswordPage() {
     const [ready, setReady] = useState(false)
     const [done, setDone] = useState(false)
     const router = useRouter()
+    const searchParams = useSearchParams()
     const supabase = createClient()
 
     useEffect(() => {
-        // Check if session already exists (came via /api/auth/callback code exchange)
-        supabase.auth.getSession().then(({ data: { session } }) => {
+        async function bootstrap() {
+            // ── PKCE flow: exchange ?code= for a session ──────────────────
+            const code = searchParams.get('code')
+            if (code) {
+                const { error } = await supabase.auth.exchangeCodeForSession(code)
+                if (!error) {
+                    setReady(true)
+                    setSessionLoading(false)
+                    return
+                }
+                console.error('[set-password] PKCE exchange error:', error.message)
+            }
+
+            // ── Check for existing session (implicit flow already processed) ──
+            const { data: { session } } = await supabase.auth.getSession()
             if (session) {
                 setReady(true)
                 setSessionLoading(false)
                 return
             }
-            setSessionLoading(false)
-        })
 
-        // Also listen for hash-based token (Supabase PKCE / implicit flow)
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(
-            (event, session) => {
-                if ((event === 'SIGNED_IN' || event === 'PASSWORD_RECOVERY') && session) {
-                    setReady(true)
-                    setSessionLoading(false)
+            // ── Listen for hash-based session (implicit flow) ──────────────
+            // The Supabase client SDK auto-parses the URL hash and fires SIGNED_IN.
+            const { data: { subscription } } = supabase.auth.onAuthStateChange(
+                (event, session) => {
+                    if ((event === 'SIGNED_IN' || event === 'PASSWORD_RECOVERY') && session) {
+                        setReady(true)
+                        setSessionLoading(false)
+                        subscription.unsubscribe()
+                    }
                 }
-            }
-        )
+            )
 
-        return () => subscription.unsubscribe()
+            // Give the SDK 4 seconds to detect hash tokens before showing error
+            setTimeout(() => {
+                setSessionLoading(false)
+            }, 4000)
+        }
+
+        bootstrap()
     }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
     async function handleSubmit(e: React.FormEvent) {
@@ -47,11 +85,11 @@ export default function SetPasswordPage() {
         setError('')
 
         if (password.length < 8) {
-            setError('Le mot de passe doit contenir au moins 8 caractères')
+            setError('Le mot de passe doit contenir au moins 8 caractères.')
             return
         }
         if (password !== confirmPassword) {
-            setError('Les mots de passe ne correspondent pas')
+            setError('Les mots de passe ne correspondent pas.')
             return
         }
 
@@ -65,9 +103,16 @@ export default function SetPasswordPage() {
         }
 
         setDone(true)
-        // Short delay so user sees the success state
-        setTimeout(() => router.push('/fr/app'), 2000)
+        setTimeout(() => router.push('/fr/app'), 2500)
     }
+
+    // Password strength: 0-4
+    const strength = Math.min(
+        4,
+        [password.length >= 8, /[A-Z]/.test(password), /[0-9]/.test(password), /[^A-Za-z0-9]/.test(password)]
+            .filter(Boolean).length
+    )
+    const strengthColor = ['bg-red-400', 'bg-orange-400', 'bg-yellow-400', 'bg-blue-400', 'bg-green-500']
 
     /* ── Success screen ── */
     if (done) {
@@ -82,6 +127,7 @@ export default function SetPasswordPage() {
                     </div>
                     <h2 className="text-2xl font-bold text-[#1e1e1e] mb-3">Mot de passe créé !</h2>
                     <p className="text-[#8A8578] text-sm">Redirection vers votre Espace Professionnel...</p>
+                    <Loader2 className="w-5 h-5 animate-spin text-[#C0A76A] mx-auto mt-4" />
                 </div>
             </div>
         )
@@ -93,13 +139,13 @@ export default function SetPasswordPage() {
             <div className="min-h-screen bg-[#FAFAF8] flex items-center justify-center">
                 <div className="flex flex-col items-center gap-4">
                     <Loader2 className="w-8 h-8 text-[#C0A76A] animate-spin" />
-                    <p className="text-[#8A8578] text-sm">Vérification en cours...</p>
+                    <p className="text-[#8A8578] text-sm font-medium">Vérification de votre lien d'invitation...</p>
                 </div>
             </div>
         )
     }
 
-    /* ── No session — invalid/expired link ── */
+    /* ── Invalid / expired link ── */
     if (!ready) {
         return (
             <div className="min-h-screen bg-[#FAFAF8] flex items-center justify-center px-4">
@@ -127,6 +173,7 @@ export default function SetPasswordPage() {
     return (
         <div className="min-h-screen bg-[#FAFAF8] flex items-center justify-center px-4 py-16">
             <div className="max-w-[440px] w-full">
+
                 {/* Header */}
                 <div className="text-center mb-10">
                     <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-[#C0A76A] to-[#A8914F] shadow-lg shadow-[#C0A76A]/20 mb-6">
@@ -135,14 +182,15 @@ export default function SetPasswordPage() {
                     <h1 className="text-2xl font-bold text-[#1e1e1e] mb-2">
                         Créez votre mot de passe
                     </h1>
-                    <p className="text-[#8A8578] text-sm leading-relaxed">
-                        Votre compte professionnel est prêt. Définissez votre mot de passe pour accéder à votre espace.
+                    <p className="text-[#8A8578] text-sm leading-relaxed max-w-sm mx-auto">
+                        Votre compte professionnel est prêt. Définissez votre mot de passe pour accéder à votre Espace Pro.
                     </p>
                 </div>
 
                 {/* Form card */}
                 <div className="bg-white rounded-2xl border border-[#E8E4DC] shadow-[0_4px_24px_rgba(0,0,0,0.06)] p-8">
                     <form onSubmit={handleSubmit} className="space-y-5">
+
                         {/* Error banner */}
                         {error && (
                             <div className="p-3 rounded-xl bg-red-50 border border-red-100 text-sm text-red-600">
@@ -162,24 +210,28 @@ export default function SetPasswordPage() {
                                     onChange={(e) => setPassword(e.target.value)}
                                     placeholder="Minimum 8 caractères"
                                     required
+                                    autoFocus
                                     className="w-full px-4 py-3 pr-12 text-base bg-[#FAFAF8] border border-[#E8E4DC] rounded-xl placeholder:text-[#B0A898] focus:outline-none focus:border-[#C0A76A] focus:ring-2 focus:ring-[#C0A76A]/20 transition-all min-h-[48px]"
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword(v => !v)}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#B0A898] hover:text-[#8A8578] transition-colors"
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#B0A898] hover:text-[#8A8578] transition-colors p-1"
+                                    tabIndex={-1}
                                 >
                                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                                 </button>
                             </div>
-                            {/* Strength indicator */}
+
+                            {/* Strength bar */}
                             {password && (
-                                <div className="flex gap-1 mt-1">
-                                    {[...Array(4)].map((_, i) => (
-                                        <div key={i} className={`h-1 flex-1 rounded-full transition-colors ${password.length >= (i + 1) * 2
-                                                ? i < 1 ? 'bg-red-400' : i < 2 ? 'bg-amber-400' : i < 3 ? 'bg-blue-400' : 'bg-green-500'
-                                                : 'bg-[#E8E4DC]'
-                                            }`} />
+                                <div className="flex gap-1 mt-1.5">
+                                    {[0, 1, 2, 3].map(i => (
+                                        <div
+                                            key={i}
+                                            className={`h-1 flex-1 rounded-full transition-colors duration-300 ${i < strength ? strengthColor[strength] : 'bg-[#E8E4DC]'
+                                                }`}
+                                        />
                                     ))}
                                 </div>
                             )}
@@ -202,15 +254,17 @@ export default function SetPasswordPage() {
                                 <button
                                     type="button"
                                     onClick={() => setShowConfirm(v => !v)}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#B0A898] hover:text-[#8A8578] transition-colors"
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#B0A898] hover:text-[#8A8578] transition-colors p-1"
+                                    tabIndex={-1}
                                 >
                                     {showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
                                 </button>
                             </div>
-                            {/* Match indicator */}
                             {confirmPassword && (
-                                <p className={`text-xs ${password === confirmPassword ? 'text-green-600' : 'text-red-500'}`}>
-                                    {password === confirmPassword ? '✓ Les mots de passe correspondent' : '✗ Les mots de passe ne correspondent pas'}
+                                <p className={`text-xs mt-1 ${password === confirmPassword ? 'text-green-600' : 'text-red-500'}`}>
+                                    {password === confirmPassword
+                                        ? '✓ Les mots de passe correspondent'
+                                        : '✗ Les mots de passe ne correspondent pas'}
                                 </p>
                             )}
                         </div>
@@ -223,8 +277,7 @@ export default function SetPasswordPage() {
                         >
                             {loading
                                 ? <><Loader2 className="w-5 h-5 animate-spin" /> Création en cours...</>
-                                : 'Créer mon mot de passe'
-                            }
+                                : 'Créer mon mot de passe'}
                         </button>
                     </form>
                 </div>
@@ -234,5 +287,21 @@ export default function SetPasswordPage() {
                 </p>
             </div>
         </div>
+    )
+}
+
+// Suspense wrapper required by Next.js App Router for useSearchParams()
+export default function SetPasswordPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-[#FAFAF8] flex items-center justify-center">
+                <div className="flex flex-col items-center gap-4">
+                    <Loader2 className="w-8 h-8 text-[#C0A76A] animate-spin" />
+                    <p className="text-[#8A8578] text-sm font-medium">Chargement...</p>
+                </div>
+            </div>
+        }>
+            <SetPasswordInner />
+        </Suspense>
     )
 }

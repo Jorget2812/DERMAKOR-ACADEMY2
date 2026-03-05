@@ -241,9 +241,12 @@ export async function approveVerification(requestId: string, initialLevel: 'STAN
     // 2. Invite user via Auth
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://dermakor-academy.vercel.app'
     const { data: authUser, error: authError } = await adminClient.auth.admin.inviteUserByEmail(request.email, {
-        redirectTo: `${siteUrl}/api/auth/callback?type=invite`,
+        // Point DIRECTLY to the client-side page so the browser Supabase SDK
+        // can detect the #access_token hash fragment (servers never receive hashes).
+        redirectTo: `${siteUrl}/fr/auth/set-password`,
         data: { full_name: request.full_name }
     })
+
 
     if (authError) {
         // If user already exists, we just link it

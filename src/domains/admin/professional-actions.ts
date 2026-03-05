@@ -15,10 +15,19 @@ export async function deleteProfessional(userId: string): Promise<{ success: boo
     const supabase = await createClient()
     const adminClient = createAdminClient()
 
+    // ═══════════════════════════════════════════════════════════════
+    // REGLA ABSOLUTA: el usuario admin NUNCA puede ser eliminado
+    // ═══════════════════════════════════════════════════════════════
+    const PROTECTED_ADMIN_ID = '01f6e8cd-f5c8-417f-b53a-29eb06108af9'
+    if (userId === PROTECTED_ADMIN_ID) {
+        throw new Error('Ce compte est protégé et ne peut pas être supprimé.')
+    }
+
     // Guard: Get the current admin's ID to prevent self-deletion
     const { data: { user: adminUser } } = await supabase.auth.getUser()
     if (!adminUser) throw new Error('Non authentifié')
     if (adminUser.id === userId) throw new Error('Vous ne pouvez pas supprimer votre propre compte.')
+
 
     // Guard: verify target is not another admin
     const { data: targetProfile } = await supabase
