@@ -239,7 +239,9 @@ export async function approveVerification(requestId: string, initialLevel: 'STAN
     if (fetchError || !request) throw new Error("Demande introuvable")
 
     // 2. Invite user via Auth
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://dermakor-academy.vercel.app'
     const { data: authUser, error: authError } = await adminClient.auth.admin.inviteUserByEmail(request.email, {
+        redirectTo: `${siteUrl}/api/auth/callback?type=invite`,
         data: { full_name: request.full_name }
     })
 
