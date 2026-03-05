@@ -238,39 +238,60 @@ export async function approveVerification(requestId: string, initialLevel: 'STAN
 
     if (fetchError || !request) throw new Error("Demande introuvable")
 
-    // 2. Generate invite link WITHOUT sending via Supabase
-    //    (Supabase email = vulnerable to Gmail prefetch consuming the OTP)
+    // 2. Create auth user via generateLink (doesn't send any email)
+    //    We only use this to get a confirmed user_id in Supabase Auth.
+    //    The Supabase link itself is discarded — we send our own link.
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://dermakor-academy.vercel.app'
+    let userId: string
+
     const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
         type: 'invite',
         email: request.email,
-        options: {
-            redirectTo: `${siteUrl}/fr/auth/set-password`,
-            data: { full_name: request.full_name }
-        }
+        options: { data: { full_name: request.full_name } }
     })
 
     if (linkError) {
-        // If user already exists, update profile directly
-        if (linkError.message.toLowerCase().includes('already registered') || linkError.message.toLowerCase().includes('already exists')) {
+        // User already exists in Auth — find their profile
+        if (linkError.message.toLowerCase().includes('already registered') ||
+            linkError.message.toLowerCase().includes('already exists')) {
             const { data: existingProfile } = await supabase
                 .from('profiles')
                 .select('id')
                 .eq('email', request.email)
                 .single()
 
-            if (existingProfile) {
-                await updateProfileAndRequest(requestId, existingProfile.id, request, initialLevel, adminUser.id)
-                return { success: true, note: "User already existed, profile linked." }
-            }
+            if (!existingProfile) throw new Error('Profil introuvable pour cet email.')
+            userId = existingProfile.id
+        } else {
+            throw new Error(`Erreur création compte: ${linkError.message}`)
         }
-        throw new Error(`Link generation error: ${linkError.message}`)
+    } else {
+        userId = linkData.user.id
     }
 
-    const userId = linkData.user.id
-    const inviteLink = linkData.properties.action_link
+    // 3. Generate our own custom token (Gmail-prefetch proof)
+    //    Token is stored in invitation_tokens, valid 7 days.
+    //    Gmail prefetching /fr/auth/set-password?token=xxx is harmless (GET = page only).
+    //    Token is only consumed when user POSTs the password via /api/auth/set-password.
+    const crypto = await import('crypto')
+    const inviteToken = crypto.randomBytes(32).toString('hex')
 
-    // 3. Send invitation email via our own SMTP (Gmail-prefetch resistant)
+    const { error: tokenInsertError } = await (adminClient as any)
+        .from('invitation_tokens')
+        .insert({
+            user_id: userId,
+            email: request.email,
+            token: inviteToken,
+            used: false,
+            expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+        })
+
+
+    if (tokenInsertError) throw new Error(`Token DB error: ${tokenInsertError.message}`)
+
+    const inviteLink = `${siteUrl}/fr/auth/set-password?token=${inviteToken}`
+
+    // 4. Send email via Hostinger SMTP (not Supabase)
     const { sendInvitationEmail } = await import('@/lib/email-service')
     await sendInvitationEmail({
         to: request.email,
@@ -279,7 +300,6 @@ export async function approveVerification(requestId: string, initialLevel: 'STAN
     })
 
     await updateProfileAndRequest(requestId, userId, request, initialLevel, adminUser.id)
-
     await auditLog('APPROVE_VERIFICATION', 'verification_requests', requestId, { email: request.email })
 
     revalidatePath('/admin')

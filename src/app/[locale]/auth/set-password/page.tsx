@@ -1,104 +1,45 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
-import { createClient } from '@/lib/supabase/client'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { CheckCircle2, Loader2, Lock, Eye, EyeOff } from 'lucide-react'
+import { useState, Suspense } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
+import { CheckCircle2, Loader2, Lock, Eye, EyeOff, AlertTriangle } from 'lucide-react'
 
 /**
- * Set Password page for invited professionals.
+ * Set Password page — Custom token flow (Gmail-prefetch proof).
  *
- * Supabase invitation emails redirect here with one of two token delivery methods:
+ * Gmail prefetches GET requests — our link is just a page, not an OTP endpoint.
+ * The token is only consumed when the user POSTs the form with their password.
  *
- * 1. IMPLICIT FLOW (most common):
- *    URL: /fr/auth/set-password#access_token=xxx&refresh_token=yyy&type=invite
- *    → The hash fragment is ONLY readable by the browser.
- *    → The Supabase JS client detects the hash automatically and fires onAuthStateChange.
- *
- * 2. PKCE FLOW:
- *    URL: /fr/auth/set-password?code=xxx
- *    → We call exchangeCodeForSession(code) to establish the session.
- *
- * This page handles BOTH flows.
+ * URL: /fr/auth/set-password?token=<64-char hex>
+ * API: POST /api/auth/set-password { token, password }
  */
-
-// Inner component uses useSearchParams — must be wrapped in Suspense
 function SetPasswordInner() {
+    const searchParams = useSearchParams()
+    const router = useRouter()
+    const token = searchParams.get('token')
+
     const [password, setPassword] = useState('')
     const [confirmPassword, setConfirmPassword] = useState('')
     const [showPassword, setShowPassword] = useState(false)
     const [showConfirm, setShowConfirm] = useState(false)
     const [loading, setLoading] = useState(false)
-    const [sessionLoading, setSessionLoading] = useState(true)
     const [error, setError] = useState('')
-    const [ready, setReady] = useState(false)
     const [done, setDone] = useState(false)
-    const router = useRouter()
-    const searchParams = useSearchParams()
-    const supabase = createClient()
 
-    useEffect(() => {
-        async function bootstrap() {
-            // ── Detect Supabase error in hash IMMEDIATELY ──────────────────
-            // e.g. #error=access_denied&error_code=otp_expired
-            // These are sent when the token is expired or already used.
-            if (typeof window !== 'undefined') {
-                const hash = window.location.hash
-                if (hash.includes('error=') || hash.includes('error_code=')) {
-                    // Token is invalid/expired — show error screen immediately
-                    setSessionLoading(false)
-                    return
-                }
-            }
+    // No token in URL → invalid link
+    if (!token) {
+        return <InvalidLink message="Aucun token trouvé dans ce lien." />
+    }
 
-            // ── SECURITY: Sign out ANY existing session first ──────────────
-            await supabase.auth.signOut()
+    // Password strength score 0-4
+    const strength = [
+        password.length >= 8,
+        /[A-Z]/.test(password),
+        /[0-9]/.test(password),
+        /[^A-Za-z0-9]/.test(password),
+    ].filter(Boolean).length
 
-            // ── PKCE flow: exchange ?code= for a session ──────────────────
-            const code = searchParams.get('code')
-            if (code) {
-                const { error } = await supabase.auth.exchangeCodeForSession(code)
-                if (!error) {
-                    const { data: { session } } = await supabase.auth.getSession()
-                    if (session?.user?.email === 'admin@dermakorswiss.com') {
-                        setSessionLoading(false)
-                        return
-                    }
-                    setReady(true)
-                    setSessionLoading(false)
-                    return
-                }
-                console.error('[set-password] PKCE exchange error:', error.message)
-                setSessionLoading(false)
-                return
-            }
-
-            // ── Listen for hash-based session (implicit flow) ──────────────
-            const { data: { subscription } } = supabase.auth.onAuthStateChange(
-                (event, session) => {
-                    if ((event === 'SIGNED_IN' || event === 'PASSWORD_RECOVERY') && session) {
-                        if (session.user.email === 'admin@dermakorswiss.com') {
-                            subscription.unsubscribe()
-                            setSessionLoading(false)
-                            return
-                        }
-                        setReady(true)
-                        setSessionLoading(false)
-                        subscription.unsubscribe()
-                    }
-                }
-            )
-
-            // Give the SDK 4 seconds to detect hash tokens before showing error
-            setTimeout(() => {
-                setSessionLoading(false)
-            }, 4000)
-        }
-
-        bootstrap()
-    }, []) // eslint-disable-line react-hooks/exhaustive-deps
-
-
+    const strengthColors = ['bg-[#E8E4DC]', 'bg-red-400', 'bg-amber-400', 'bg-blue-400', 'bg-green-500']
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault()
@@ -114,27 +55,29 @@ function SetPasswordInner() {
         }
 
         setLoading(true)
-        const { error: updateError } = await supabase.auth.updateUser({ password })
-        setLoading(false)
+        try {
+            const res = await fetch('/api/auth/set-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token, password }),
+            })
+            const result = await res.json()
 
-        if (updateError) {
-            setError(updateError.message)
-            return
+            if (result.error) {
+                setError(result.error)
+                return
+            }
+
+            setDone(true)
+            setTimeout(() => router.push('/fr/login'), 3000)
+        } catch {
+            setError('Erreur réseau. Veuillez réessayer.')
+        } finally {
+            setLoading(false)
         }
-
-        setDone(true)
-        setTimeout(() => router.push('/fr/app'), 2500)
     }
 
-    // Password strength: 0-4
-    const strength = Math.min(
-        4,
-        [password.length >= 8, /[A-Z]/.test(password), /[0-9]/.test(password), /[^A-Za-z0-9]/.test(password)]
-            .filter(Boolean).length
-    )
-    const strengthColor = ['bg-red-400', 'bg-orange-400', 'bg-yellow-400', 'bg-blue-400', 'bg-green-500']
-
-    /* ── Success screen ── */
+    /* ── Success ── */
     if (done) {
         return (
             <div className="min-h-screen bg-[#FAFAF8] flex items-center justify-center px-4">
@@ -146,50 +89,14 @@ function SetPasswordInner() {
                         </div>
                     </div>
                     <h2 className="text-2xl font-bold text-[#1e1e1e] mb-3">Mot de passe créé !</h2>
-                    <p className="text-[#8A8578] text-sm">Redirection vers votre Espace Professionnel...</p>
-                    <Loader2 className="w-5 h-5 animate-spin text-[#C0A76A] mx-auto mt-4" />
+                    <p className="text-[#8A8578] text-sm mb-4">Redirection vers la page de connexion...</p>
+                    <Loader2 className="w-5 h-5 animate-spin text-[#C0A76A] mx-auto" />
                 </div>
             </div>
         )
     }
 
-    /* ── Loading session ── */
-    if (sessionLoading) {
-        return (
-            <div className="min-h-screen bg-[#FAFAF8] flex items-center justify-center">
-                <div className="flex flex-col items-center gap-4">
-                    <Loader2 className="w-8 h-8 text-[#C0A76A] animate-spin" />
-                    <p className="text-[#8A8578] text-sm font-medium">Vérification de votre lien d'invitation...</p>
-                </div>
-            </div>
-        )
-    }
-
-    /* ── Invalid / expired link ── */
-    if (!ready) {
-        return (
-            <div className="min-h-screen bg-[#FAFAF8] flex items-center justify-center px-4">
-                <div className="max-w-md w-full text-center bg-white rounded-2xl border border-red-100 shadow-[0_4px_24px_rgba(0,0,0,0.06)] p-10">
-                    <div className="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-6">
-                        <Lock className="w-8 h-8 text-red-400" />
-                    </div>
-                    <h2 className="text-xl font-bold text-[#1e1e1e] mb-3">Lien invalide ou expiré</h2>
-                    <p className="text-[#8A8578] text-sm leading-relaxed">
-                        Ce lien d'invitation a expiré ou a déjà été utilisé.
-                        Contactez l'administrateur pour recevoir un nouvel accès.
-                    </p>
-                    <a
-                        href="/fr/login"
-                        className="mt-6 inline-block text-sm text-[#C0A76A] hover:underline font-medium"
-                    >
-                        Aller à la page de connexion →
-                    </a>
-                </div>
-            </div>
-        )
-    }
-
-    /* ── Set password form ── */
+    /* ── Form ── */
     return (
         <div className="min-h-screen bg-[#FAFAF8] flex items-center justify-center px-4 py-16">
             <div className="max-w-[440px] w-full">
@@ -199,22 +106,20 @@ function SetPasswordInner() {
                     <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-[#C0A76A] to-[#A8914F] shadow-lg shadow-[#C0A76A]/20 mb-6">
                         <Lock className="w-7 h-7 text-white" />
                     </div>
-                    <h1 className="text-2xl font-bold text-[#1e1e1e] mb-2">
-                        Créez votre mot de passe
-                    </h1>
+                    <h1 className="text-2xl font-bold text-[#1e1e1e] mb-2">Créez votre mot de passe</h1>
                     <p className="text-[#8A8578] text-sm leading-relaxed max-w-sm mx-auto">
                         Votre compte professionnel est prêt. Définissez votre mot de passe pour accéder à votre Espace Pro.
                     </p>
                 </div>
 
-                {/* Form card */}
+                {/* Card */}
                 <div className="bg-white rounded-2xl border border-[#E8E4DC] shadow-[0_4px_24px_rgba(0,0,0,0.06)] p-8">
                     <form onSubmit={handleSubmit} className="space-y-5">
 
-                        {/* Error banner */}
                         {error && (
-                            <div className="p-3 rounded-xl bg-red-50 border border-red-100 text-sm text-red-600">
-                                {error}
+                            <div className="flex items-start gap-3 p-3 rounded-xl bg-red-50 border border-red-100 text-sm text-red-600">
+                                <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                                <span>{error}</span>
                             </div>
                         )}
 
@@ -227,37 +132,29 @@ function SetPasswordInner() {
                                 <input
                                     type={showPassword ? 'text' : 'password'}
                                     value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
+                                    onChange={e => setPassword(e.target.value)}
                                     placeholder="Minimum 8 caractères"
                                     required
                                     autoFocus
                                     className="w-full px-4 py-3 pr-12 text-base bg-[#FAFAF8] border border-[#E8E4DC] rounded-xl placeholder:text-[#B0A898] focus:outline-none focus:border-[#C0A76A] focus:ring-2 focus:ring-[#C0A76A]/20 transition-all min-h-[48px]"
                                 />
-                                <button
-                                    type="button"
+                                <button type="button" tabIndex={-1}
                                     onClick={() => setShowPassword(v => !v)}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#B0A898] hover:text-[#8A8578] transition-colors p-1"
-                                    tabIndex={-1}
-                                >
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#B0A898] hover:text-[#8A8578] transition-colors p-1">
                                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                                 </button>
                             </div>
-
                             {/* Strength bar */}
                             {password && (
                                 <div className="flex gap-1 mt-1.5">
                                     {[0, 1, 2, 3].map(i => (
-                                        <div
-                                            key={i}
-                                            className={`h-1 flex-1 rounded-full transition-colors duration-300 ${i < strength ? strengthColor[strength] : 'bg-[#E8E4DC]'
-                                                }`}
-                                        />
+                                        <div key={i} className={`h-1 flex-1 rounded-full transition-colors duration-300 ${i < strength ? strengthColors[strength] : 'bg-[#E8E4DC]'}`} />
                                     ))}
                                 </div>
                             )}
                         </div>
 
-                        {/* Confirm password */}
+                        {/* Confirm */}
                         <div className="space-y-1.5">
                             <label className="block text-sm font-medium text-[#1e1e1e]">
                                 Confirmer le mot de passe *
@@ -266,25 +163,20 @@ function SetPasswordInner() {
                                 <input
                                     type={showConfirm ? 'text' : 'password'}
                                     value={confirmPassword}
-                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                    onChange={e => setConfirmPassword(e.target.value)}
                                     placeholder="Répétez le mot de passe"
                                     required
                                     className="w-full px-4 py-3 pr-12 text-base bg-[#FAFAF8] border border-[#E8E4DC] rounded-xl placeholder:text-[#B0A898] focus:outline-none focus:border-[#C0A76A] focus:ring-2 focus:ring-[#C0A76A]/20 transition-all min-h-[48px]"
                                 />
-                                <button
-                                    type="button"
+                                <button type="button" tabIndex={-1}
                                     onClick={() => setShowConfirm(v => !v)}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#B0A898] hover:text-[#8A8578] transition-colors p-1"
-                                    tabIndex={-1}
-                                >
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#B0A898] hover:text-[#8A8578] transition-colors p-1">
                                     {showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
                                 </button>
                             </div>
                             {confirmPassword && (
                                 <p className={`text-xs mt-1 ${password === confirmPassword ? 'text-green-600' : 'text-red-500'}`}>
-                                    {password === confirmPassword
-                                        ? '✓ Les mots de passe correspondent'
-                                        : '✗ Les mots de passe ne correspondent pas'}
+                                    {password === confirmPassword ? '✓ Les mots de passe correspondent' : '✗ Ne correspondent pas'}
                                 </p>
                             )}
                         </div>
@@ -302,23 +194,37 @@ function SetPasswordInner() {
                     </form>
                 </div>
 
-                <p className="text-center text-xs text-[#B0A898] mt-6">
-                    DermaKor Swiss Sàrl — Ecublens, Suisse
-                </p>
+                <p className="text-center text-xs text-[#B0A898] mt-6">DermaKor Swiss Sàrl — Ecublens, Suisse</p>
             </div>
         </div>
     )
 }
 
-// Suspense wrapper required by Next.js App Router for useSearchParams()
+function InvalidLink({ message }: { message: string }) {
+    return (
+        <div className="min-h-screen bg-[#FAFAF8] flex items-center justify-center px-4">
+            <div className="max-w-md w-full text-center bg-white rounded-2xl border border-red-100 shadow-[0_4px_24px_rgba(0,0,0,0.06)] p-10">
+                <div className="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-6">
+                    <Lock className="w-8 h-8 text-red-400" />
+                </div>
+                <h2 className="text-xl font-bold text-[#1e1e1e] mb-3">Lien invalide ou expiré</h2>
+                <p className="text-[#8A8578] text-sm leading-relaxed mb-2">{message}</p>
+                <p className="text-[#8A8578] text-sm leading-relaxed">
+                    Contactez l'administrateur pour recevoir un nouvel accès.
+                </p>
+                <a href="/fr/login" className="mt-6 inline-block text-sm text-[#C0A76A] hover:underline font-medium">
+                    Aller à la page de connexion →
+                </a>
+            </div>
+        </div>
+    )
+}
+
 export default function SetPasswordPage() {
     return (
         <Suspense fallback={
             <div className="min-h-screen bg-[#FAFAF8] flex items-center justify-center">
-                <div className="flex flex-col items-center gap-4">
-                    <Loader2 className="w-8 h-8 text-[#C0A76A] animate-spin" />
-                    <p className="text-[#8A8578] text-sm font-medium">Chargement...</p>
-                </div>
+                <Loader2 className="w-8 h-8 text-[#C0A76A] animate-spin" />
             </div>
         }>
             <SetPasswordInner />
