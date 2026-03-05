@@ -1,5 +1,6 @@
 import AdminSidebar from "@/components/domains/admin/admin-sidebar"
 import { ensureAdmin } from "@/lib/auth/admin-guard"
+import { createClient } from "@/lib/supabase/server"
 
 export default async function AdminLayout({
     children,
@@ -9,10 +10,17 @@ export default async function AdminLayout({
     // Strict server-side check
     await ensureAdmin()
 
+    // Fetch pending verifications count for sidebar badge
+    const supabase = await createClient()
+    const { count: pendingCount } = await supabase
+        .from('verification_requests')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'PENDING')
+
     return (
         <div className="min-h-screen bg-[#FDFCFB] flex">
             {/* Admin Sidebar */}
-            <AdminSidebar />
+            <AdminSidebar pendingVerifications={pendingCount || 0} />
 
             <div className="flex-grow flex flex-col pl-64">
                 <header className="h-20 border-b bg-white/80 backdrop-blur-md flex items-center px-10 sticky top-0 z-40 border-border/40">

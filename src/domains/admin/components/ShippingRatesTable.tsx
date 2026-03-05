@@ -29,6 +29,7 @@ export function ShippingRatesTable({ rates: initialRates }: ShippingRatesTablePr
         if (!confirm('Supprimer ce tarif ?')) return
         try {
             await deleteShippingRate(id)
+            setRates(prev => prev.filter(r => r.id !== id))
             toast.success('Tarif supprimé')
             refresh()
         } catch (err: any) {
@@ -37,10 +38,14 @@ export function ShippingRatesTable({ rates: initialRates }: ShippingRatesTablePr
     }
 
     async function handleToggle(id: string, active: boolean) {
+        // Optimistic update — flip immediately so Switch reacts at once
+        setRates(prev => prev.map(r => r.id === id ? { ...r, active } : r))
         try {
             await toggleShippingRate(id, active)
             refresh()
         } catch (err: any) {
+            // Revert on error
+            setRates(prev => prev.map(r => r.id === id ? { ...r, active: !active } : r))
             toast.error(err.message)
         }
     }

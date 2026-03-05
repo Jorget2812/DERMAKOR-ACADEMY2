@@ -1,7 +1,7 @@
 'use server'
 
 import { createAdminClient } from '@/lib/supabase/admin'
-import { createClient } from '@/lib/supabase/server'
+import { ensureAdmin } from '@/lib/auth/admin-guard'
 
 export interface ShippingRate {
     id: string
@@ -22,20 +22,6 @@ export interface ShippingRate {
 
 export type ShippingRateInput = Omit<ShippingRate, 'id' | 'created_at' | 'updated_at'>
 
-async function verifyAdmin() {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) throw new Error('Non authentifié')
-
-    const { data: profile } = await (supabase as any)
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single()
-
-    if (!profile || profile.role !== 'ADMIN') throw new Error('Accès refusé')
-    return createAdminClient()
-}
 
 export async function getShippingRates(): Promise<ShippingRate[]> {
     // Uses admin client to bypass RLS (admin sees all rows including inactive)
@@ -53,7 +39,8 @@ export async function getShippingRates(): Promise<ShippingRate[]> {
 }
 
 export async function createShippingRate(input: ShippingRateInput): Promise<ShippingRate> {
-    const supabase = (await verifyAdmin()) as any
+    await ensureAdmin()
+    const supabase = createAdminClient() as any
     const { data, error } = await supabase
         .from('shipping_rates')
         .insert(input)
@@ -65,7 +52,8 @@ export async function createShippingRate(input: ShippingRateInput): Promise<Ship
 }
 
 export async function updateShippingRate(id: string, input: Partial<ShippingRateInput>): Promise<ShippingRate> {
-    const supabase = (await verifyAdmin()) as any
+    await ensureAdmin()
+    const supabase = createAdminClient() as any
     const { data, error } = await supabase
         .from('shipping_rates')
         .update(input)
@@ -78,7 +66,8 @@ export async function updateShippingRate(id: string, input: Partial<ShippingRate
 }
 
 export async function deleteShippingRate(id: string): Promise<void> {
-    const supabase = (await verifyAdmin()) as any
+    await ensureAdmin()
+    const supabase = createAdminClient() as any
     const { error } = await supabase
         .from('shipping_rates')
         .delete()
@@ -88,7 +77,8 @@ export async function deleteShippingRate(id: string): Promise<void> {
 }
 
 export async function toggleShippingRate(id: string, active: boolean): Promise<void> {
-    const supabase = (await verifyAdmin()) as any
+    await ensureAdmin()
+    const supabase = createAdminClient() as any
     const { error } = await supabase
         .from('shipping_rates')
         .update({ active })
