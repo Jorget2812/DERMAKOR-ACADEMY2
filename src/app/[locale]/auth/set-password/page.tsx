@@ -39,9 +39,19 @@ function SetPasswordInner() {
 
     useEffect(() => {
         async function bootstrap() {
+            // ── Detect Supabase error in hash IMMEDIATELY ──────────────────
+            // e.g. #error=access_denied&error_code=otp_expired
+            // These are sent when the token is expired or already used.
+            if (typeof window !== 'undefined') {
+                const hash = window.location.hash
+                if (hash.includes('error=') || hash.includes('error_code=')) {
+                    // Token is invalid/expired — show error screen immediately
+                    setSessionLoading(false)
+                    return
+                }
+            }
+
             // ── SECURITY: Sign out ANY existing session first ──────────────
-            // If admin has an open tab, updateUser() would modify the ADMIN's
-            // password instead of the invited user's. Always start clean.
             await supabase.auth.signOut()
 
             // ── PKCE flow: exchange ?code= for a session ──────────────────
@@ -50,7 +60,6 @@ function SetPasswordInner() {
                 const { error } = await supabase.auth.exchangeCodeForSession(code)
                 if (!error) {
                     const { data: { session } } = await supabase.auth.getSession()
-                    // Guard: never allow admin account on this page
                     if (session?.user?.email === 'admin@dermakorswiss.com') {
                         setSessionLoading(false)
                         return
@@ -60,15 +69,14 @@ function SetPasswordInner() {
                     return
                 }
                 console.error('[set-password] PKCE exchange error:', error.message)
+                setSessionLoading(false)
+                return
             }
 
             // ── Listen for hash-based session (implicit flow) ──────────────
-            // After signOut(), the Supabase client SDK re-parses the URL hash
-            // (#access_token=xxx) and fires SIGNED_IN for the invited user.
             const { data: { subscription } } = supabase.auth.onAuthStateChange(
                 (event, session) => {
                     if ((event === 'SIGNED_IN' || event === 'PASSWORD_RECOVERY') && session) {
-                        // Guard: never allow admin account on this page
                         if (session.user.email === 'admin@dermakorswiss.com') {
                             subscription.unsubscribe()
                             setSessionLoading(false)
@@ -89,6 +97,7 @@ function SetPasswordInner() {
 
         bootstrap()
     }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
 
 
     async function handleSubmit(e: React.FormEvent) {
