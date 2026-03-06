@@ -11,7 +11,8 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Eye, CheckCircle, XCircle, Loader2 } from 'lucide-react'
-import { approveVerification, rejectVerification } from '@/domains/admin/verification-actions'
+import { approveVerification, rejectVerification } from '@/domains/admin/admin-actions'
+
 import { toast } from 'sonner'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'

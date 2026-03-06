@@ -4,6 +4,10 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { Database } from '@/lib/supabase/types'
+import { ensureAdmin } from '@/lib/auth/admin-guard'
+import { getPendingVerifications as fetchPendingVerifications } from './verification-actions'
+import { sendInvitationEmail } from '@/lib/email-service'
+import crypto from 'crypto'
 
 /**
  * Audit Logger Helper
@@ -34,9 +38,6 @@ async function adminCheck() {
 
     return user
 }
-
-import { ensureAdmin } from '@/lib/auth/admin-guard'
-import { getPendingVerifications as fetchPendingVerifications } from './verification-actions'
 
 export async function getPendingVerifications() {
     return await fetchPendingVerifications()
@@ -225,86 +226,107 @@ export async function getAnalyticsStats() {
 // --- VERIFICATIONS ---
 
 export async function approveVerification(requestId: string, initialLevel: 'STANDARD' | 'PREMIUM' = 'STANDARD') {
-    const adminUser = await adminCheck()
-    const supabase = await createClient()
-    const adminClient = createAdminClient()
+    try {
+        console.log('[approveVerification] Starting approval for requestId:', requestId)
+        const adminUser = await adminCheck()
+        const supabase = await createClient()
+        const adminClient = createAdminClient()
 
-    // 1. Get request details
-    const { data: request, error: fetchError } = await supabase
-        .from('verification_requests')
-        .select('*')
-        .eq('id', requestId)
-        .single()
-
-    if (fetchError || !request) throw new Error("Demande introuvable")
-
-    // 2. Create auth user via generateLink (doesn't send any email)
-    //    We only use this to get a confirmed user_id in Supabase Auth.
-    //    The Supabase link itself is discarded — we send our own link.
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://dermakor-academy.vercel.app'
-    let userId: string
-
-    const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
-        type: 'invite',
-        email: request.email,
-        options: { data: { full_name: request.full_name } }
-    })
-
-    if (linkError) {
-        // User already exists in Auth — find their profile
-        if (linkError.message.toLowerCase().includes('already registered') ||
-            linkError.message.toLowerCase().includes('already exists')) {
-            const { data: existingProfile } = await supabase
-                .from('profiles')
-                .select('id')
-                .eq('email', request.email)
-                .single()
-
-            if (!existingProfile) throw new Error('Profil introuvable pour cet email.')
-            userId = existingProfile.id
-        } else {
-            throw new Error(`Erreur création compte: ${linkError.message}`)
+        // Verify SMTP config exists
+        if (!process.env.SMTP_USER || !process.env.SMTP_PASSWORD) {
+            console.error('[approveVerification] SMTP credentials missing in environment')
+            throw new Error("Configuration e-mail SMTP manquante sur le serveur.")
         }
-    } else {
-        userId = linkData.user.id
-    }
 
-    // 3. Generate our own custom token (Gmail-prefetch proof)
-    //    Token is stored in invitation_tokens, valid 7 days.
-    //    Gmail prefetching /fr/auth/set-password?token=xxx is harmless (GET = page only).
-    //    Token is only consumed when user POSTs the password via /api/auth/set-password.
-    const crypto = await import('crypto')
-    const inviteToken = crypto.randomBytes(32).toString('hex')
+        // 1. Get request details
+        const { data: request, error: fetchError } = await supabase
+            .from('verification_requests')
+            .select('*')
+            .eq('id', requestId)
+            .single()
 
-    const { error: tokenInsertError } = await (adminClient as any)
-        .from('invitation_tokens')
-        .insert({
-            user_id: userId,
+        if (fetchError || !request) {
+            console.error('[approveVerification] Request not found:', requestId)
+            throw new Error("Demande introuvable")
+        }
+
+        // 2. Create auth user via generateLink
+        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://dermakor-academy.vercel.app'
+        let userId: string
+
+        console.log('[approveVerification] Generating invite link for:', request.email)
+        const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
+            type: 'invite',
             email: request.email,
-            token: inviteToken,
-            used: false,
-            expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+            options: { data: { full_name: request.full_name } }
         })
 
+        if (linkError) {
+            if (linkError.message.toLowerCase().includes('already registered') ||
+                linkError.message.toLowerCase().includes('already exists')) {
+                console.log('[approveVerification] User already exists in auth, finding profile')
+                const { data: existingProfile } = await supabase
+                    .from('profiles')
+                    .select('id')
+                    .eq('email', request.email)
+                    .single()
 
-    if (tokenInsertError) throw new Error(`Token DB error: ${tokenInsertError.message}`)
+                if (!existingProfile) throw new Error('Profil introuvable pour cet email (utilisateur existant).')
+                userId = existingProfile.id
+            } else {
+                console.error('[approveVerification] Auth error:', linkError.message)
+                throw new Error(`Erreur creación compte: ${linkError.message}`)
+            }
+        } else {
+            userId = linkData.user.id
+        }
 
-    const inviteLink = `${siteUrl}/fr/auth/set-password?token=${inviteToken}`
+        // 3. Generate custom token
+        const inviteToken = crypto.randomBytes(32).toString('hex')
+        console.log('[approveVerification] Storing custom token for userId:', userId)
 
-    // 4. Send email via Hostinger SMTP (not Supabase)
-    const { sendInvitationEmail } = await import('@/lib/email-service')
-    await sendInvitationEmail({
-        to: request.email,
-        fullName: request.full_name,
-        inviteLink,
-    })
+        const { error: tokenInsertError } = await (adminClient as any)
+            .from('invitation_tokens')
+            .insert({
+                user_id: userId,
+                email: request.email,
+                token: inviteToken,
+                used: false,
+                expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+            })
 
-    await updateProfileAndRequest(requestId, userId, request, initialLevel, adminUser.id)
-    await auditLog('APPROVE_VERIFICATION', 'verification_requests', requestId, { email: request.email })
+        if (tokenInsertError) {
+            console.error('[approveVerification] Token DB error:', tokenInsertError.message)
+            throw new Error(`Token DB error: ${tokenInsertError.message}`)
+        }
 
-    revalidatePath('/admin')
-    revalidatePath('/admin/verifications')
-    return { success: true }
+        const inviteLink = `${siteUrl}/fr/auth/set-password?token=${inviteToken}`
+
+        // 4. Send email mapping via Hostinger SMTP
+        console.log('[approveVerification] Sending invitation email to:', request.email)
+        try {
+            await sendInvitationEmail({
+                to: request.email,
+                fullName: request.full_name,
+                inviteLink,
+            })
+        } catch (emailErr: any) {
+            console.error('[approveVerification] SMTP failed:', emailErr.message)
+            throw new Error(`Échec de l'envoi de l'e-mail: ${emailErr.message}`)
+        }
+
+        console.log('[approveVerification] Updating profile and request status')
+        await updateProfileAndRequest(requestId, userId, request, initialLevel, adminUser.id)
+        await auditLog('APPROVE_VERIFICATION', 'verification_requests', requestId, { email: request.email })
+
+        revalidatePath('/admin')
+        revalidatePath('/admin/verifications')
+        console.log('[approveVerification] Success')
+        return { success: true }
+    } catch (err: any) {
+        console.error('[approveVerification] CRITICAL ERROR:', err.message)
+        throw err // Re-throw to be caught by client UI
+    }
 }
 
 
