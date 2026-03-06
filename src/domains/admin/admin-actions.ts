@@ -39,6 +39,7 @@ async function adminCheck() {
     return user
 }
 
+
 export async function getPendingVerifications() {
     return await fetchPendingVerifications()
 }
@@ -239,15 +240,15 @@ export async function approveVerification(requestId: string, initialLevel: 'STAN
         }
 
         // 1. Get request details
-        const { data: request, error: fetchError } = await supabase
+        const { data: request, error: fetchError } = await adminClient
             .from('verification_requests')
             .select('*')
             .eq('id', requestId)
             .single()
 
         if (fetchError || !request) {
-            console.error('[approveVerification] Request not found:', requestId)
-            throw new Error("Demande introuvable")
+            console.error('[approveVerification] Request not found or error:', { requestId, error: fetchError })
+            throw new Error("Demande introuvable o error de acceso.")
         }
 
         // 2. Create auth user via generateLink
@@ -265,7 +266,7 @@ export async function approveVerification(requestId: string, initialLevel: 'STAN
             if (linkError.message.toLowerCase().includes('already registered') ||
                 linkError.message.toLowerCase().includes('already exists')) {
                 console.log('[approveVerification] User already exists in auth, finding profile')
-                const { data: existingProfile } = await supabase
+                const { data: existingProfile } = await adminClient
                     .from('profiles')
                     .select('id')
                     .eq('email', request.email)
@@ -316,7 +317,7 @@ export async function approveVerification(requestId: string, initialLevel: 'STAN
         }
 
         console.log('[approveVerification] Updating profile and request status')
-        await updateProfileAndRequest(requestId, userId, request, initialLevel, adminUser.id)
+        await updateProfileAndRequest(adminClient, requestId, userId, request, initialLevel, adminUser.id)
         await auditLog('APPROVE_VERIFICATION', 'verification_requests', requestId, { email: request.email })
 
         revalidatePath('/admin')
@@ -330,18 +331,21 @@ export async function approveVerification(requestId: string, initialLevel: 'STAN
 }
 
 
-async function updateProfileAndRequest(requestId: string, userId: string, request: any, initialLevel: string, adminId: string) {
-    const supabase = await createClient()
-
+async function updateProfileAndRequest(adminClient: any, requestId: string, userId: string, request: any, initialLevel: string, adminId: string) {
     // Update request
-    await supabase.from('verification_requests').update({
+    const { error: reqError } = await adminClient.from('verification_requests').update({
         status: 'APPROVED',
         reviewed_at: new Date().toISOString(),
         reviewed_by: adminId
     }).eq('id', requestId)
 
+    if (reqError) {
+        console.error('[updateProfileAndRequest] Error updating request:', reqError)
+        throw new Error(`Error DB request: ${reqError.message}`)
+    }
+
     // Upsert profile
-    const { error: upsertError } = await supabase.from('profiles').upsert({
+    const { error: upsertError } = await adminClient.from('profiles').upsert({
         id: userId,
         email: request.email as string,
         full_name: request.full_name as string,
@@ -353,7 +357,10 @@ async function updateProfileAndRequest(requestId: string, userId: string, reques
         address_pro: request.address_pro as string
     }, { onConflict: 'id' })
 
-    if (upsertError) throw new Error(upsertError.message)
+    if (upsertError) {
+        console.error('[updateProfileAndRequest] Error upserting profile:', upsertError)
+        throw new Error(`Error DB profile: ${upsertError.message}`)
+    }
 }
 
 export async function rejectVerification(requestId: string, reason: string) {
