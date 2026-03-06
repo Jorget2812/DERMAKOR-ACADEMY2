@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
         console.log('[set-password] Updating password for user:', invitation.user_id)
         const { data: updatedUser, error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
             invitation.user_id,
-            { password }
+            { password, email_confirm: true }
         )
         console.log('[set-password] updateUserById result:', {
             userId: updatedUser?.user?.id ?? null,
