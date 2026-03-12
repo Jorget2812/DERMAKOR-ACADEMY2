@@ -5,21 +5,21 @@ import nodemailer from 'nodemailer'
  * Env vars required: SMTP_USER, SMTP_PASSWORD
  */
 function createTransporter() {
-    return nodemailer.createTransport({
-        host: 'smtp.hostinger.com',
-        port: 465,
-        secure: true,
-        auth: {
-            user: process.env.SMTP_USER!,
-            pass: process.env.SMTP_PASSWORD!,
-        },
-    })
+  return nodemailer.createTransport({
+    host: 'smtp.hostinger.com',
+    port: 465,
+    secure: true,
+    auth: {
+      user: process.env.SMTP_USER!,
+      pass: process.env.SMTP_PASSWORD!,
+    },
+  })
 }
 
 interface InvitationEmailOptions {
-    to: string
-    fullName: string
-    inviteLink: string
+  to: string
+  fullName: string
+  inviteLink: string
 }
 
 /**
@@ -31,14 +31,14 @@ interface InvitationEmailOptions {
  * the token is embedded in the HTML body and Gmail cannot prefetch it.
  */
 export async function sendInvitationEmail({ to, fullName, inviteLink }: InvitationEmailOptions) {
-    const transporter = createTransporter()
-    const firstName = fullName.split(' ')[0] || fullName
+  const transporter = createTransporter()
+  const firstName = fullName.split(' ')[0] || fullName
 
-    await transporter.sendMail({
-        from: '"DermaKor Swiss" <info@dermakorswiss.com>',
-        to,
-        subject: 'Votre accès professionnel DermaKor Swiss est prêt',
-        html: `<!DOCTYPE html>
+  await transporter.sendMail({
+    from: '"DermaKor Swiss" <info@dermakorswiss.com>',
+    to,
+    subject: 'Votre accès professionnel DermaKor Swiss est prêt',
+    html: `<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
@@ -121,6 +121,75 @@ export async function sendInvitationEmail({ to, fullName, inviteLink }: Invitati
   </table>
 </body>
 </html>`,
-        text: `Bonjour ${firstName},\n\nVotre accès professionnel DermaKor Swiss a été approuvé.\n\nCréez votre mot de passe ici (lien valable 24h) :\n${inviteLink}\n\n---\nDermaKor Swiss Sàrl — info@dermakorswiss.com`,
-    })
+    text: `Bonjour ${firstName},\n\nVotre accès professionnel DermaKor Swiss a été approuvé.\n\nCréez votre mot de passe ici (lien valable 24h) :\n${inviteLink}\n\n---\nDermaKor Swiss Sàrl — info@dermakorswiss.com`,
+  })
+}
+
+export async function sendOrderNotificationEmail(params: {
+  orderNumber: string
+  clientName: string
+  clientEmail: string
+  totalAmount: string
+  itemCount: number
+}) {
+  const { orderNumber, clientName, clientEmail, totalAmount, itemCount } = params
+
+  const adminEmail = process.env.ADMIN_NOTIFICATION_EMAIL || 'info@dermakorswiss.com'
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://dermakor-academy.vercel.app'
+
+  const transporter = createTransporter()
+
+  const html = `
+    <div style="font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #FAFAF8; padding: 40px 30px;">
+      <div style="text-align: center; margin-bottom: 30px;">
+        <h1 style="font-family: 'Oswald', sans-serif; color: #1a1a1a; font-size: 24px; margin: 0;">
+          Nouvelle Commande
+        </h1>
+        <div style="width: 60px; height: 3px; background: #C0A76A; margin: 12px auto;"></div>
+      </div>
+      
+      <div style="background: #ffffff; border-radius: 8px; padding: 24px; margin-bottom: 20px; border: 1px solid #e8e8e8;">
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr>
+            <td style="padding: 8px 0; color: #888; font-size: 14px;">Commande</td>
+            <td style="padding: 8px 0; text-align: right; font-weight: 600; color: #1a1a1a;">${orderNumber}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 0; color: #888; font-size: 14px;">Client</td>
+            <td style="padding: 8px 0; text-align: right; font-weight: 600; color: #1a1a1a;">${clientName}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 0; color: #888; font-size: 14px;">Email</td>
+            <td style="padding: 8px 0; text-align: right; color: #1a1a1a;">${clientEmail}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 0; color: #888; font-size: 14px;">Articles</td>
+            <td style="padding: 8px 0; text-align: right; color: #1a1a1a;">${itemCount} article${itemCount > 1 ? 's' : ''}</td>
+          </tr>
+          <tr style="border-top: 2px solid #C0A76A;">
+            <td style="padding: 12px 0 8px; color: #1a1a1a; font-weight: 700; font-size: 16px;">Total</td>
+            <td style="padding: 12px 0 8px; text-align: right; font-weight: 700; font-size: 16px; color: #C0A76A;">${totalAmount}</td>
+          </tr>
+        </table>
+      </div>
+      
+      <div style="text-align: center;">
+        <a href="${appUrl}/fr/admin/orders" 
+           style="display: inline-block; padding: 12px 32px; background: #1a1a1a; color: #ffffff; text-decoration: none; border-radius: 6px; font-size: 14px; font-weight: 500;">
+          Voir la commande
+        </a>
+      </div>
+      
+      <p style="text-align: center; color: #aaa; font-size: 12px; margin-top: 30px;">
+        DermaKor Academy — Notification automatique
+      </p>
+    </div>
+  `
+
+  await transporter.sendMail({
+    from: process.env.SMTP_FROM_EMAIL || 'info@dermakorswiss.com',
+    to: adminEmail,
+    subject: `🛒 Nouvelle commande ${orderNumber} — ${totalAmount}`,
+    html,
+  })
 }

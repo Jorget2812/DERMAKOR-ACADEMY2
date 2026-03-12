@@ -1,7 +1,9 @@
 ﻿'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { PublicProduct, VerifiedProduct, CartItem, OrderInput } from './types'
+import { CartItem, OrderInput, PublicProduct, VerifiedProduct } from './types'
+import { logger } from '@/lib/logger'
+import { sendOrderNotificationEmail } from '@/lib/email-service'
 import { Json } from '@/lib/supabase/types'
 import Stripe from 'stripe'
 
@@ -388,13 +390,44 @@ export async function createBankTransferOrder(
     // 4. Fetch order reference
     const { data: order } = await supabase
         .from('orders')
-        .select('invoice_number')
-        .eq('id', orderId as string)
+        .select('invoice_number, total_final_cents, user_id')
+        .eq('id', (orderId as unknown) as string)
         .single()
+
+    const reference = order?.invoice_number || `DK-${((orderId as unknown) as string).substring(0, 8).toUpperCase()}`
+
+    // 5. Send email notification to admin (fire-and-forget)
+    if (order) {
+        const log = logger('order-notification');
+        (async () => {
+            try {
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('full_name, company_name, email')
+                    .eq('id', user.id)
+                    .single()
+
+                if (profile) {
+                    const totalFormatted = `${(order.total_final_cents / 100).toFixed(2)} CHF`
+                    await sendOrderNotificationEmail({
+                        orderNumber: reference,
+                        clientName: profile.company_name || profile.full_name || 'Client',
+                        clientEmail: profile.email || '',
+                        totalAmount: totalFormatted,
+                        itemCount: items.reduce((acc, item) => acc + item.qty, 0),
+                    })
+                }
+            } catch (emailError) {
+                log.error('Failed to send admin notification email', {
+                    orderNumber: reference,
+                }, emailError)
+            }
+        })()
+    }
 
     return {
         success: true,
-        reference: order?.invoice_number || `DK-${(orderId as string).substring(0, 8).toUpperCase()}`,
+        reference,
         id: orderId as string
     }
 }

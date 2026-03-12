@@ -67,7 +67,13 @@ const adminNavItems = [
     },
 ]
 
-export default function AdminSidebar({ pendingVerifications = 0 }: { pendingVerifications?: number }) {
+export default function AdminSidebar({
+    pendingVerifications = 0,
+    pendingOrders = 0
+}: {
+    pendingVerifications?: number
+    pendingOrders?: number
+}) {
     const pathname = usePathname()
     const [openSection, setOpenSection] = useState<string | null>(null)
 
@@ -130,6 +136,10 @@ export default function AdminSidebar({ pendingVerifications = 0 }: { pendingVeri
                                 {item.href === '/admin/verifications' && pendingVerifications > 0 ? (
                                     <span className="ml-auto inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-red-500 text-white text-[9px] font-black tracking-normal">
                                         {pendingVerifications > 99 ? '99+' : pendingVerifications}
+                                    </span>
+                                ) : item.href === '/admin/orders' && pendingOrders > 0 ? (
+                                    <span className="ml-auto inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-accent text-white text-[9px] font-black tracking-normal">
+                                        {pendingOrders > 99 ? '99+' : pendingOrders}
                                     </span>
                                 ) : (
                                     <ChevronRight size={14} className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
