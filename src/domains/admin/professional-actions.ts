@@ -15,18 +15,16 @@ export async function deleteProfessional(userId: string): Promise<{ success: boo
     const supabase = await createClient()
     const adminClient = createAdminClient()
 
-    // ═══════════════════════════════════════════════════════════════
-    // REGLA ABSOLUTA: el usuario admin NUNCA puede ser eliminado
-    // ═══════════════════════════════════════════════════════════════
-    const PROTECTED_ADMIN_ID = '01f6e8cd-f5c8-417f-b53a-29eb06108af9'
-    if (userId === PROTECTED_ADMIN_ID) {
-        throw new Error('Ce compte est protégé et ne peut pas être supprimé.')
-    }
-
     // Guard: Get the current admin's ID to prevent self-deletion
     const { data: { user: adminUser } } = await supabase.auth.getUser()
     if (!adminUser) throw new Error('Non authentifié')
     if (adminUser.id === userId) throw new Error('Vous ne pouvez pas supprimer votre propre compte.')
+
+    // Guard: prevent deleting any other admin (role-based, not UUID-based)
+    const { data: targetIsAdmin } = await supabase.rpc('is_admin', { p_uid: userId })
+    if (targetIsAdmin) {
+        throw new Error('Les comptes administrateurs ne peuvent pas être supprimés.')
+    }
 
 
     // Guard: verify target is not another admin
@@ -58,11 +56,13 @@ export async function deleteProfessional(userId: string): Promise<{ success: boo
         .delete()
         .eq('user_id', userId)
 
-    // C) Delete verification_requests (by user_id or email)
+    // C) Delete verification_requests by user_id only
+    // (not by email — email uniqueness is enforced by Supabase Auth but using
+    // user_id is safer and avoids accidental cross-user deletion)
     await adminClient
         .from('verification_requests')
         .delete()
-        .or(`email.eq.${targetProfile.email}`)
+        .eq('user_id', userId)
 
     // D) Delete profile
     await adminClient

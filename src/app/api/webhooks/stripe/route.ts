@@ -1,34 +1,45 @@
 import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
-import { createClient } from '@supabase/supabase-js'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { logger } from '@/lib/logger'
 
+import { webhookLimiter } from '@/lib/rate-limit'
+
+const log = logger('stripe-webhook')
+
+// Stripe client is safe to instantiate at module level (no sensitive data in constructor)
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
     apiVersion: '2023-10-16' as any,
 })
 
-const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET!
-
-// Service role client for bypassing RLS during webhook processing
-const supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
-
 export async function POST(req: Request) {
+    // 0. Rate limiting (Global for webhooks)
+    const { success } = await webhookLimiter.limit('stripe-global')
+    if (!success) {
+        log.warn('Webhook global rate limit exceeded')
+        return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+    }
+
     const body = await req.text()
     const signature = req.headers.get('stripe-signature')
+    const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET
 
     let event: Stripe.Event
 
     try {
         if (!signature || !endpointSecret) throw new Error('Missing stripe signature or secret')
         event = stripe.webhooks.constructEvent(body, signature, endpointSecret)
-    } catch (err: any) {
-        console.error(`Webhook signature verification failed: ${err.message}`)
-        return NextResponse.json({ error: err.message }, { status: 400 })
+    } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : 'Unknown error'
+        log.error('Webhook signature verification failed', {}, err)
+        return NextResponse.json({ error: msg }, { status: 400 })
     }
 
-    // Handle Idempotency
+    // Supabase admin client is created per-request (not module-level)
+    // to ensure env vars are validated at request time, not at cold start
+    const supabaseAdmin = createAdminClient()
+
+    // Idempotency: skip already-processed events
     const { data: existingEvent } = await supabaseAdmin
         .from('stripe_events')
         .select('event_id')
@@ -36,22 +47,22 @@ export async function POST(req: Request) {
         .single()
 
     if (existingEvent) {
+        log.info('Event already processed, skipping', { eventId: event.id })
         return NextResponse.json({ received: true, already_processed: true })
     }
 
     if (event.type === 'checkout.session.completed') {
         const session = event.data.object as Stripe.Checkout.Session
-        console.log(`[Stripe Webhook] Processing event: ${event.id}`)
+        log.info('Processing checkout.session.completed', { eventId: event.id })
 
-        // PASO 1: Extraer orderId del metadata
         const orderId = session.metadata?.orderId
         if (!orderId) {
-            console.error('[Stripe Webhook] No orderId in metadata')
+            log.error('No orderId in Stripe session metadata', { eventId: event.id })
             return NextResponse.json({ error: 'No orderId' }, { status: 400 })
         }
 
         try {
-            // PASO 2: Buscar orden existente
+            // Fetch order
             const { data: existingOrder, error: fetchError } = await supabaseAdmin
                 .from('orders')
                 .select('id, status, user_id')
@@ -59,51 +70,55 @@ export async function POST(req: Request) {
                 .single()
 
             if (fetchError || !existingOrder) {
-                console.error(`[Stripe Webhook] Order not found: ${orderId}`, fetchError)
+                log.error('Order not found', { orderId, eventId: event.id }, fetchError)
                 return NextResponse.json({ error: 'Order not found' }, { status: 400 })
             }
 
-            // PASO 3: Idempotencia de orden
+            // Idempotency: skip already-paid orders
             if (existingOrder.status === 'PAID') {
-                console.log(`[Stripe Webhook] Order already paid: ${orderId}`)
+                log.info('Order already paid, skipping', { orderId })
                 return NextResponse.json({ received: true, already_paid: true })
             }
 
             if (existingOrder.status !== 'PENDING') {
-                console.error(`[Stripe Webhook] Unexpected order status: ${existingOrder.status} for order ${orderId}`)
+                log.error('Unexpected order status', { orderId, status: existingOrder.status })
                 return NextResponse.json({ error: 'Invalid order status' }, { status: 400 })
             }
 
-            // PASO 4: Marcar como pagada via RPC
+            // Mark order as paid
             const { error: paidError } = await supabaseAdmin.rpc('mark_order_paid', {
                 p_order_id: orderId
             })
 
             if (paidError) {
-                console.error(`[Stripe Webhook] mark_order_paid failed for ${orderId}:`, paidError)
+                log.error('mark_order_paid failed', { orderId }, paidError)
                 throw new Error('mark_order_paid failed')
             }
 
-            // PASO 5: Decrementar stock por cada item
+            // Decrement stock for each item
             const { data: orderItems, error: itemsError } = await supabaseAdmin
                 .from('order_items')
                 .select('variant_id, qty')
                 .eq('order_id', orderId)
 
             if (itemsError) {
-                console.error(`[Stripe Webhook] Error fetching items for order ${orderId}:`, itemsError)
+                log.error('Error fetching order items', { orderId }, itemsError)
                 throw itemsError
             }
 
             for (const item of orderItems ?? []) {
+                if (!item.variant_id) {
+                    log.warn('Order item missing variant_id, skipping stock decrement', { orderId })
+                    continue
+                }
                 const { data: stockOk, error: stockError } = await supabaseAdmin.rpc('decrement_stock_safe', {
                     p_variant_id: item.variant_id,
                     p_qty: item.qty
                 })
 
                 if (!stockOk || stockError) {
-                    // Stock insuficiente: loguear en audit pero NO revertir
-                    // El pago ya ocurrió, el admin debe gestionar manualmente
+                    // Stock insufficient: log alert but do NOT revert — payment already captured.
+                    // Admin must handle manually. This will be visible in audit_logs.
                     await supabaseAdmin.from('audit_logs').insert({
                         action: 'STOCK_ALERT',
                         resource_type: 'product_variant',
@@ -112,25 +127,27 @@ export async function POST(req: Request) {
                             order_id: orderId,
                             qty_requested: item.qty,
                             message: 'Stock insuficiente post-pago Stripe',
-                            error: stockError?.message || 'Manual intervention needed'
-                        }
+                            error: stockError?.message ?? 'Manual intervention needed',
+                        },
                     })
-                    console.error(`[Stripe Webhook] STOCK ALERT variant: ${item.variant_id} for order ${orderId}`)
+                    log.error('STOCK ALERT — insufficient stock after payment', {
+                        variantId: item.variant_id,
+                        orderId,
+                        qty: item.qty,
+                    })
                 } else {
-                    console.log(`[Stripe Webhook] Stock decremented for variant: ${item.variant_id}`)
+                    log.debug('Stock decremented', { variantId: item.variant_id, qty: item.qty })
                 }
             }
 
-            // PASO 6: Marcar evento procesado
-            await supabaseAdmin.from('stripe_events').insert({
-                event_id: event.id
-            })
+            // Record processed event (idempotency guard)
+            await supabaseAdmin.from('stripe_events').insert({ event_id: event.id })
 
-            console.log(`[Stripe Webhook] Order completed successfully: ${orderId}`)
+            log.info('Order completed successfully', { orderId, eventId: event.id })
 
-        } catch (dbError: any) {
-            console.error("[Stripe Webhook] Database processing error:", dbError)
-            return NextResponse.json({ error: "Internal processing error" }, { status: 500 })
+        } catch (dbError: unknown) {
+            log.error('Database processing error', { orderId, eventId: event.id }, dbError)
+            return NextResponse.json({ error: 'Internal processing error' }, { status: 500 })
         }
     }
 

@@ -7,7 +7,7 @@ import { Database } from '@/lib/supabase/types'
 import { ensureAdmin } from '@/lib/auth/admin-guard'
 import { getPendingVerifications as fetchPendingVerifications } from './verification-actions'
 import { sendInvitationEmail } from '@/lib/email-service'
-import crypto from 'crypto'
+import { generateRandomToken, hashToken } from '@/lib/crypto'
 
 /**
  * Audit Logger Helper
@@ -265,15 +265,26 @@ export async function approveVerification(requestId: string, initialLevel: 'STAN
         if (linkError) {
             if (linkError.message.toLowerCase().includes('already registered') ||
                 linkError.message.toLowerCase().includes('already exists')) {
-                console.log('[approveVerification] User already exists in auth, finding profile')
-                const { data: existingProfile } = await adminClient
-                    .from('profiles')
-                    .select('id')
-                    .eq('email', request.email)
-                    .single()
+                // User already exists in auth.users — look them up directly (profiles may not exist yet)
+                console.log('[approveVerification] User already exists in Auth, searching by email:', request.email)
+                const { data: listData, error: listError } = await adminClient.auth.admin.listUsers()
 
-                if (!existingProfile) throw new Error('Profil introuvable pour cet email (utilisateur existant).')
-                userId = existingProfile.id
+                if (listError) {
+                    console.error('[approveVerification] listUsers failed:', listError.message)
+                    throw new Error(`Impossible de récupérer les utilisateurs Auth: ${listError.message}`)
+                }
+
+                const existingAuthUser = listData?.users?.find(u => u.email === request.email)
+                if (!existingAuthUser) {
+                    console.error('[approveVerification] Auth user not found despite "already registered" error')
+                    throw new Error('Utilisateur introuvable dans Auth malgré l\'erreur "already registered".')
+                }
+
+                userId = existingAuthUser.id
+                console.log('[approveVerification] Found existing auth user, confirming email, userId:', userId)
+
+                // Confirm email for existing user before issuing invitation token
+                await adminClient.auth.admin.updateUserById(userId, { email_confirm: true })
             } else {
                 console.error('[approveVerification] Auth error:', linkError.message)
                 throw new Error(`Erreur creación compte: ${linkError.message}`)
@@ -282,16 +293,17 @@ export async function approveVerification(requestId: string, initialLevel: 'STAN
             userId = linkData.user.id
         }
 
-        // 3. Generate custom token
-        const inviteToken = crypto.randomBytes(32).toString('hex')
-        console.log('[approveVerification] Storing custom token for userId:', userId)
+        // 3. Generate custom token (securely hashed)
+        const rawToken = generateRandomToken()
+        const hashedToken = hashToken(rawToken)
+        console.log('[approveVerification] Storing hashed token for userId:', userId)
 
         const { error: tokenInsertError } = await (adminClient as any)
             .from('invitation_tokens')
             .insert({
                 user_id: userId,
                 email: request.email,
-                token: inviteToken,
+                token: hashedToken, // STORE THE HASH
                 used: false,
                 expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
             })
@@ -301,7 +313,7 @@ export async function approveVerification(requestId: string, initialLevel: 'STAN
             throw new Error(`Token DB error: ${tokenInsertError.message}`)
         }
 
-        const inviteLink = `${siteUrl}/fr/auth/set-password?token=${inviteToken}`
+        const inviteLink = `${siteUrl}/fr/auth/set-password?token=${rawToken}`
 
         // 4. Send email mapping via Hostinger SMTP
         console.log('[approveVerification] Sending invitation email to:', request.email)

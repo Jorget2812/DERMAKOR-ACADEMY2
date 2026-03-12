@@ -181,6 +181,36 @@ export type Database = {
         }
         Relationships: []
       }
+      invitation_tokens: {
+        Row: {
+          id: string
+          user_id: string
+          email: string
+          token: string
+          used: boolean
+          expires_at: string
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          email: string
+          token: string
+          used?: boolean
+          expires_at: string
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          email?: string
+          token?: string
+          used?: boolean
+          expires_at?: string
+          created_at?: string | null
+        }
+        Relationships: []
+      }
       lesson_progress: {
         Row: {
           completed_at: string | null
@@ -888,9 +918,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cancel_order: {
+        Args: { p_order_id: string }
+        Returns: undefined
+      }
       decrement_stock_safe: {
         Args: { p_qty: number; p_variant_id: string }
         Returns: boolean
+      }
+      mark_order_paid: {
+        Args: { p_order_id: string }
+        Returns: undefined
       }
       get_product_public: {
         Args: { p_slug: string }

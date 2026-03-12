@@ -23,7 +23,7 @@ export default async function AppLayout({
         .single()
 
     if (!profile || profile.verification_status !== 'APPROVED' || profile.status !== 'ACTIVE') {
-        // redirect('/app/pending')
+        redirect('/app/pending')
     }
 
     return (

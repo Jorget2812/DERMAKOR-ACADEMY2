@@ -12,7 +12,20 @@ import { NextResponse, type NextRequest } from 'next/server'
  * For implicit flow (hash tokens), the browser lands directly on
  * /fr/auth/set-password and the Supabase JS client picks up the hash.
  */
+import { authLimiter, getIP } from '@/lib/rate-limit'
+
+/**
+ * Auth callback handler — PKCE code exchange fallback.
+ */
 export async function GET(request: NextRequest) {
+    const ip = getIP(request)
+
+    // 0. Rate limiting
+    const { success } = await authLimiter.limit(ip)
+    if (!success) {
+        return NextResponse.redirect(new URL('/fr/auth/set-password?error=rate-limit', request.url))
+    }
+
     const { searchParams, origin } = new URL(request.url)
     const code = searchParams.get('code')
 
