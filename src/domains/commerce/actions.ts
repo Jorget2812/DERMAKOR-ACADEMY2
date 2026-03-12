@@ -3,7 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { CartItem, OrderInput, PublicProduct, VerifiedProduct } from './types'
 import { logger } from '@/lib/logger'
-import { sendOrderNotificationEmail } from '@/lib/email-service'
+import { sendOrderNotificationEmail, sendOrderConfirmationEmail } from '@/lib/email-service'
 import { Json } from '@/lib/supabase/types'
 import Stripe from 'stripe'
 
@@ -416,6 +416,51 @@ export async function createBankTransferOrder(
                         totalAmount: totalFormatted,
                         itemCount: items.reduce((acc, item) => acc + item.qty, 0),
                     })
+
+                    // 6. Send premium confirmation email to client
+                    try {
+                        const { data: bankSettings } = await supabase
+                            .from('bank_settings')
+                            .select('*')
+                            .eq('is_active', true)
+                            .order('created_at', { ascending: false })
+                            .limit(1)
+                            .single()
+
+                        const subtotalCents = items.reduce((acc, item) => acc + (item.price * item.qty), 0)
+                        const tvaRate = 8.1
+                        const tvaAmountCents = Math.round(subtotalCents * (tvaRate / 100))
+
+                        // Note: total_final_cents in order already includes shipping or other costs
+                        const shippingCents = order.total_final_cents - (subtotalCents + tvaAmountCents)
+
+                        await sendOrderConfirmationEmail({
+                            to: profile.email,
+                            clientName: profile.company_name || profile.full_name || 'Client',
+                            orderNumber: reference,
+                            items: items.map(item => ({
+                                productName: item.name,
+                                quantity: item.qty,
+                                unitPriceHT: item.price / 100,
+                                subtotalHT: (item.price * item.qty) / 100,
+                            })),
+                            subtotalHT: subtotalCents / 100,
+                            tvaAmount: tvaAmountCents / 100,
+                            tvaRate: tvaRate,
+                            shippingCost: shippingCents / 100,
+                            totalTTC: order.total_final_cents / 100,
+                            bankDetails: {
+                                beneficiary: bankSettings?.account_holder || 'DermaKor Swiss Sàrl',
+                                iban: bankSettings?.iban || '',
+                                bank: bankSettings?.bank_name || '',
+                                swift_bic: bankSettings?.swift_bic || '',
+                            }
+                        })
+                    } catch (confirmEmailErr) {
+                        log.error('Failed to send confirmation email to client', {
+                            orderNumber: reference,
+                        }, confirmEmailErr)
+                    }
                 }
             } catch (emailError) {
                 log.error('Failed to send admin notification email', {

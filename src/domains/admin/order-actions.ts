@@ -8,6 +8,8 @@ import { auditLog } from './admin-actions'
 
 
 import { generateAndUploadInvoice } from '@/lib/invoice-service'
+import { logger } from '@/lib/logger'
+import { sendPaymentConfirmedEmail } from '@/lib/email-service'
 
 /**
  * List all orders.
@@ -80,6 +82,29 @@ export async function markOrderPaid(orderId: string) {
         if (error.message.includes('Insufficient stock')) throw new Error("Stock insuffisant")
         throw new Error(error.message)
     }
+
+    // Send Payment Confirmation Email (fire-and-forget)
+    const log = logger('payment-notification');
+    (async () => {
+        try {
+            const { data: order } = await supabase
+                .from('orders')
+                .select('*, profiles(email, full_name, company_name)')
+                .eq('id', orderId)
+                .single()
+
+            if (order?.profiles) {
+                await sendPaymentConfirmedEmail({
+                    to: order.profiles.email,
+                    clientName: order.profiles.company_name || order.profiles.full_name || 'Client',
+                    orderNumber: order.invoice_number || order.id.substring(0, 8).toUpperCase(),
+                    totalTTC: order.total_final_cents / 100,
+                })
+            }
+        } catch (emailError) {
+            log.error('Failed to send payment confirmed email', { orderId }, emailError)
+        }
+    })()
 
     revalidatePath('/admin/orders')
     revalidatePath(`/admin/orders/${orderId}`)

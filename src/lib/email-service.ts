@@ -193,3 +193,203 @@ export async function sendOrderNotificationEmail(params: {
     html,
   })
 }
+
+export async function sendOrderConfirmationEmail(params: {
+  to: string
+  clientName: string
+  orderNumber: string
+  items: Array<{
+    productName: string
+    quantity: number
+    unitPriceHT: number
+    subtotalHT: number
+  }>
+  subtotalHT: number
+  tvaAmount: number
+  tvaRate: number
+  shippingCost: number
+  totalTTC: number
+  bankDetails: {
+    beneficiary: string
+    iban: string
+    bank: string
+    swift_bic?: string
+  }
+}) {
+  const { to, clientName, orderNumber, items, subtotalHT, tvaAmount, shippingCost, totalTTC, bankDetails } = params
+  const transporter = createTransporter()
+
+  const itemsHtml = items.map(item => `
+    <tr>
+      <td style="padding: 12px 8px; border-bottom: 1px solid #f0f0ed; font-size: 14px; color: #1a1a1a;">${item.productName}</td>
+      <td style="padding: 12px 8px; border-bottom: 1px solid #f0f0ed; text-align: center; font-size: 14px; color: #1a1a1a;">${item.quantity}</td>
+      <td style="padding: 12px 8px; border-bottom: 1px solid #f0f0ed; text-align: right; font-size: 14px; color: #1a1a1a;">${item.unitPriceHT.toFixed(2)}</td>
+      <td style="padding: 12px 8px; border-bottom: 1px solid #f0f0ed; text-align: right; font-size: 14px; color: #1a1a1a; font-weight: 600;">${item.subtotalHT.toFixed(2)}</td>
+    </tr>
+  `).join('')
+
+  const html = `
+    <div style="font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #FAFAF8; padding: 40px 30px;">
+      <div style="text-align: center; margin-bottom: 40px;">
+        <h2 style="font-family: 'Times New Roman', serif; letter-spacing: 2px; color: #1a1a1a; font-size: 20px; margin: 0; text-transform: uppercase;">DERMAKOR ACADEMY</h2>
+        <div style="width: 60px; height: 3px; background: #C0A76A; margin: 15px auto;"></div>
+      </div>
+
+      <p style="color: #1a1a1a; font-size: 16px; line-height: 1.5;">Bonjour ${clientName},</p>
+      <p style="color: #1a1a1a; font-size: 16px; line-height: 1.5; margin-bottom: 25px;">Merci pour votre commande. Voici le récapitulatif de votre achat.</p>
+
+      <div style="background: #ffffff; border: 1px solid #e8e8e8; border-radius: 8px; overflow: hidden; margin-bottom: 30px;">
+        <table style="width: 100%; border-collapse: collapse;">
+          <thead>
+            <tr style="background: #f5f5f0;">
+              <th style="padding: 12px 8px; text-align: left; font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 1px;">Produit</th>
+              <th style="padding: 12px 8px; text-align: center; font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 1px;">Qté</th>
+              <th style="padding: 12px 8px; text-align: right; font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 1px;">Prix Unitaire</th>
+              <th style="padding: 12px 8px; text-align: right; font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 1px;">Sous-total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${itemsHtml}
+          </tbody>
+        </table>
+        
+        <div style="padding: 20px; background: #fafafa;">
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+              <td style="padding: 4px 0; color: #888; font-size: 14px;">Sous-total HT</td>
+              <td style="padding: 4px 0; text-align: right; color: #1a1a1a; font-size: 14px;">${subtotalHT.toFixed(2)} CHF</td>
+            </tr>
+            <tr>
+              <td style="padding: 4px 0; color: #888; font-size: 14px;">TVA (8.1%)</td>
+              <td style="padding: 4px 0; text-align: right; color: #1a1a1a; font-size: 14px;">${tvaAmount.toFixed(2)} CHF</td>
+            </tr>
+            <tr>
+              <td style="padding: 4px 0; color: #888; font-size: 14px;">Frais de livraison</td>
+              <td style="padding: 4px 0; text-align: right; color: #1a1a1a; font-size: 14px;">${shippingCost.toFixed(2)} CHF</td>
+            </tr>
+            <tr>
+              <td style="padding: 12px 0 0; color: #1a1a1a; font-weight: 700; font-size: 18px;">Total TTC</td>
+              <td style="padding: 12px 0 0; text-align: right; font-weight: 700; font-size: 18px; color: #C0A76A;">${totalTTC.toFixed(2)} CHF</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+
+      <div style="background: #ffffff; border: 1px solid #e8e8e8; border-radius: 8px; padding: 25px; margin-bottom: 30px;">
+        <h3 style="margin-top: 0; font-size: 16px; color: #1a1a1a; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #f0f0ed; padding-bottom: 15px;">Instructions de paiement</h3>
+        <p style="color: #1a1a1a; font-size: 14px; line-height: 1.6;">Pour finaliser votre commande, veuillez effectuer un virement bancaire avec les informations suivantes :</p>
+        
+        <table style="width: 100%; font-size: 14px; margin-top: 15px;">
+          <tr>
+            <td style="padding: 6px 0; color: #888; width: 100px;">Bénéficiaire</td>
+            <td style="padding: 6px 0; color: #1a1a1a; font-weight: 600;">${bankDetails.beneficiary}</td>
+          </tr>
+          <tr>
+            <td style="padding: 6px 0; color: #888;">Banque</td>
+            <td style="padding: 6px 0; color: #1a1a1a; font-weight: 600;">${bankDetails.bank}</td>
+          </tr>
+          <tr>
+            <td style="padding: 6px 0; color: #888;">IBAN</td>
+            <td style="padding: 6px 0; color: #C0A76A; font-weight: 700; font-family: monospace; font-size: 15px;">${bankDetails.iban}</td>
+          </tr>
+          ${bankDetails.swift_bic ? `
+          <tr>
+            <td style="padding: 6px 0; color: #888;">SWIFT/BIC</td>
+            <td style="padding: 6px 0; color: #1a1a1a; font-weight: 600;">${bankDetails.swift_bic}</td>
+          </tr> ` : ''}
+          <tr>
+            <td style="padding: 6px 0; color: #888;">Référence</td>
+            <td style="padding: 6px 0; color: #1a1a1a; font-weight: 700;">${orderNumber}</td>
+          </tr>
+        </table>
+        
+        <div style="margin-top: 20px; padding: 12px; background: #FAFAF8; border-left: 3px solid #C0A76A; font-size: 13px; color: #1a1a1a;">
+          Veuillez indiquer le numéro de commande <strong>${orderNumber}</strong> comme référence de paiement pour nous aider à identifier votre versement.
+        </div>
+      </div>
+
+      <div style="text-align: center; color: #888; font-size: 13px; line-height: 1.6;">
+        <p>Si vous avez des questions, contactez-nous à <a href="mailto:info@dermakorswiss.com" style="color: #C0A76A; text-decoration: none;">info@dermakorswiss.com</a></p>
+        <p style="margin-top: 20px; color: #aaa; font-style: italic;">DermaKor Academy — Votre partenaire en cosméceutiques professionnels</p>
+      </div>
+    </div>
+  `
+
+  await transporter.sendMail({
+    from: process.env.SMTP_FROM_EMAIL || 'info@dermakorswiss.com',
+    to,
+    subject: `Confirmation de commande ${orderNumber} — DermaKor Academy`,
+    html,
+  })
+}
+
+export async function sendPaymentConfirmedEmail(params: {
+  to: string
+  clientName: string
+  orderNumber: string
+  totalTTC: number
+}) {
+  const { to, clientName, orderNumber, totalTTC } = params
+  const transporter = createTransporter()
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://dermakor-academy.vercel.app'
+
+  const html = `
+    <div style="font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #FAFAF8; padding: 40px 30px;">
+      <div style="text-align: center; margin-bottom: 40px;">
+        <h2 style="font-family: 'Times New Roman', serif; letter-spacing: 2px; color: #1a1a1a; font-size: 20px; margin: 0; text-transform: uppercase;">DERMAKOR ACADEMY</h2>
+        <div style="width: 60px; height: 3px; background: #C0A76A; margin: 15px auto;"></div>
+      </div>
+
+      <p style="color: #1a1a1a; font-size: 16px; line-height: 1.5;">Bonjour ${clientName},</p>
+      
+      <div style="text-align: center; margin: 30px 0;">
+        <div style="font-size: 48px; color: #C0A76A; margin-bottom: 10px;">✓</div>
+        <h3 style="font-size: 18px; color: #1a1a1a; margin: 0; text-transform: uppercase; letter-spacing: 1px;">Paiement Reçu</h3>
+      </div>
+
+      <p style="color: #1a1a1a; font-size: 16px; line-height: 1.6; text-align: center; margin-bottom: 30px;">
+        Nous avons bien reçu votre paiement pour la commande <strong>${orderNumber}</strong>.
+      </p>
+
+      <div style="background: #ffffff; border: 1px solid #e8e8e8; border-radius: 8px; padding: 25px; margin-bottom: 35px;">
+        <table style="width: 100%; font-size: 15px;">
+          <tr>
+            <td style="padding: 10px 0; color: #888;">Numéro de commande</td>
+            <td style="padding: 10px 0; text-align: right; color: #1a1a1a; font-weight: 600;">${orderNumber}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px 0; color: #888;">Montant total</td>
+            <td style="padding: 10px 0; text-align: right; color: #C0A76A; font-weight: 700; font-size: 18px;">${totalTTC.toFixed(2)} CHF</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px 0; color: #888;">Statut</td>
+            <td style="padding: 10px 0; text-align: right;"><span style="color: #C0A76A; font-weight: 700;">PAYÉ ✓</span></td>
+          </tr>
+        </table>
+      </div>
+
+      <p style="color: #1a1a1a; font-size: 15px; line-height: 1.6; margin-bottom: 30px; text-align: center;">
+        Votre commande est maintenant en cours de préparation. Vous recevrez une notification dès qu'elle sera expédiée.
+      </p>
+
+      <div style="text-align: center; margin-bottom: 40px;">
+        <a href="${appUrl}/fr/app/orders" 
+           style="display: inline-block; padding: 14px 36px; background: #1a1a1a; color: #ffffff; text-decoration: none; border-radius: 6px; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
+          Voir ma commande
+        </a>
+      </div>
+
+      <div style="text-align: center; color: #888; font-size: 13px; line-height: 1.6; border-top: 1px solid #e8e8e8; padding-top: 30px;">
+        <p>Si vous avez des questions, contactez-nous à <a href="mailto:info@dermakorswiss.com" style="color: #C0A76A; text-decoration: none;">info@dermakorswiss.com</a></p>
+        <p style="margin-top: 20px; color: #aaa; font-style: italic;">DermaKor Academy — Votre partenaire en cosméceutiques professionnels</p>
+      </div>
+    </div>
+  `
+
+  await transporter.sendMail({
+    from: process.env.SMTP_FROM_EMAIL || 'info@dermakorswiss.com',
+    to,
+    subject: `Paiement confirmé — Commande ${orderNumber} — DermaKor Academy`,
+    html,
+  })
+}
