@@ -251,46 +251,41 @@ export async function approveVerification(requestId: string, initialLevel: 'STAN
             throw new Error("Demande introuvable o error de acceso.")
         }
 
-        // 2. Create auth user via generateLink
+        // 2. Resolve userId — check auth.users FIRST to avoid generateLink "already registered" error
         const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://dermakor-academy.vercel.app'
         let userId: string
 
-        console.log('[approveVerification] Generating invite link for:', request.email)
-        const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
-            type: 'invite',
-            email: request.email,
-            options: { data: { full_name: request.full_name } }
-        })
+        console.log('[approveVerification] Checking if user exists in Auth for:', request.email)
+        const { data: listData, error: listError } = await adminClient.auth.admin.listUsers()
 
-        if (linkError) {
-            if (linkError.message.toLowerCase().includes('already registered') ||
-                linkError.message.toLowerCase().includes('already exists')) {
-                // User already exists in auth.users — look them up directly (profiles may not exist yet)
-                console.log('[approveVerification] User already exists in Auth, searching by email:', request.email)
-                const { data: listData, error: listError } = await adminClient.auth.admin.listUsers()
+        if (listError) {
+            console.error('[approveVerification] listUsers failed:', listError.message)
+            throw new Error(`Error listing users: ${listError.message}`)
+        }
 
-                if (listError) {
-                    console.error('[approveVerification] listUsers failed:', listError.message)
-                    throw new Error(`Impossible de récupérer les utilisateurs Auth: ${listError.message}`)
-                }
+        const existingUser = listData?.users?.find(u => u.email === request.email)
 
-                const existingAuthUser = listData?.users?.find(u => u.email === request.email)
-                if (!existingAuthUser) {
-                    console.error('[approveVerification] Auth user not found despite "already registered" error')
-                    throw new Error('Utilisateur introuvable dans Auth malgré l\'erreur "already registered".')
-                }
-
-                userId = existingAuthUser.id
-                console.log('[approveVerification] Found existing auth user, confirming email, userId:', userId)
-
-                // Confirm email for existing user before issuing invitation token
-                await adminClient.auth.admin.updateUserById(userId, { email_confirm: true })
-            } else {
-                console.error('[approveVerification] Auth error:', linkError.message)
-                throw new Error(`Erreur creación compte: ${linkError.message}`)
-            }
+        if (existingUser) {
+            // User already exists — reuse their ID and confirm email
+            userId = existingUser.id
+            console.log('[approveVerification] User already exists in Auth, skipping generateLink, userId:', userId)
+            await adminClient.auth.admin.updateUserById(userId, { email_confirm: true })
         } else {
+            // New user — create via generateLink
+            console.log('[approveVerification] Creating new user via generateLink for:', request.email)
+            const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
+                type: 'invite',
+                email: request.email,
+                options: { data: { full_name: request.full_name } }
+            })
+
+            if (linkError) {
+                console.error('[approveVerification] generateLink error:', linkError.message)
+                throw new Error(`Error generating invite link: ${linkError.message}`)
+            }
+
             userId = linkData.user.id
+            console.log('[approveVerification] New user created via generateLink, userId:', userId)
         }
 
         // 3. Generate custom token (securely hashed)
