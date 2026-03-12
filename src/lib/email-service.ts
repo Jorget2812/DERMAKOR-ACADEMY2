@@ -174,7 +174,7 @@ export async function sendOrderNotificationEmail(params: {
       </div>
       
       <div style="text-align: center;">
-        <a href="${appUrl}/fr/admin/orders" 
+        <a href="https://dermakor-academy.vercel.app/fr/admin/orders" 
            style="display: inline-block; padding: 12px 32px; background: #1a1a1a; color: #ffffff; text-decoration: none; border-radius: 6px; font-size: 14px; font-weight: 500;">
           Voir la commande
         </a>
