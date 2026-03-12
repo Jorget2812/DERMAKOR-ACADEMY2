@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { logger } from '@/lib/logger'
-
+import { hashToken } from '@/lib/crypto'
 import { authLimiter, getIP } from '@/lib/rate-limit'
 
 const log = logger('set-password')
@@ -49,11 +49,12 @@ export async function POST(request: NextRequest) {
 
         const supabaseAdmin = createAdminClient()
 
-        // 1. Find and validate token
+        // 1. Find and validate token — DB stores SHA-256 hash, so hash before lookup
+        const tokenHash = hashToken(token)
         const { data: invitation, error: tokenError } = await supabaseAdmin
             .from('invitation_tokens')
             .select('id, user_id, email, expires_at, used')
-            .eq('token', token)
+            .eq('token', tokenHash)
             .single()
 
         if (tokenError || !invitation) {
