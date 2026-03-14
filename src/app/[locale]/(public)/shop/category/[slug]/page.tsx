@@ -83,7 +83,7 @@ export default async function CategoryShopPage({ params }: { params: Promise<{ s
                             </Link>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-10">
+                        <div className="grid grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-6 xl:gap-10">
                             {products.map((product) => (
                                 <Card key={product.id} className="group flex flex-col h-full bg-white border-none shadow-[0_4px_20px_-5px_rgba(0,0,0,0.05)] hover:shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] transition-all duration-500 rounded-3xl overflow-hidden">
                                     <Link href={`/shop/${product.slug}`} className="cursor-pointer">
@@ -124,17 +124,17 @@ export default async function CategoryShopPage({ params }: { params: Promise<{ s
                                             <div className="absolute inset-0 bg-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                                         </div>
 
-                                        <CardContent className="p-6 flex-grow flex flex-col">
-                                            <div className="space-y-3 mb-6">
+                                        <CardContent className="p-3 sm:p-6 flex-grow flex flex-col">
+                                            <div className="space-y-1 sm:space-y-3 mb-3 sm:mb-6">
                                                 <div className="flex items-center justify-between mb-1">
-                                                    <span className="text-[9px] font-bold text-primary/20 uppercase tracking-[0.2em]">DermaKor Swiss</span>
+                                                    <span className="text-[8px] sm:text-[9px] font-bold text-primary/20 uppercase tracking-[0.2em] hidden sm:block">DermaKor Swiss</span>
                                                     {product.is_bestseller && (
-                                                        <span className="text-[10px] font-bold text-[#C0A76A] uppercase tracking-[0.1em] font-oswald border border-[#C0A76A] px-2 py-0.5 rounded-[2px] bg-transparent">
+                                                        <span className="text-[8px] sm:text-[10px] font-bold text-[#C0A76A] uppercase tracking-[0.1em] font-oswald border border-[#C0A76A] px-1.5 sm:px-2 py-0.5 rounded-[2px] bg-transparent">
                                                             Bestseller
                                                         </span>
                                                     )}
                                                 </div>
-                                                <CardTitle className="text-xl font-serif tracking-tight leading-snug group-hover:text-accent transition-colors duration-300">
+                                                <CardTitle className="text-sm sm:text-xl font-serif tracking-tight leading-snug group-hover:text-accent transition-colors duration-300 line-clamp-2">
                                                     {product.name}
                                                 </CardTitle>
 
@@ -164,7 +164,7 @@ export default async function CategoryShopPage({ params }: { params: Promise<{ s
                                         </CardContent>
                                     </Link>
 
-                                    <CardFooter className="p-8 pt-0">
+                                    <CardFooter className="p-3 pt-0 sm:p-8 sm:pt-0">
                                         <Link href={`/shop/${product.slug}`} className="w-full">
                                             <Button className="w-full h-12 rounded-2xl bg-primary text-white hover:bg-accent transition-all font-bold text-[10px] uppercase tracking-widest shadow-lg shadow-primary/5 group" variant="default">
                                                 Détails du produit
