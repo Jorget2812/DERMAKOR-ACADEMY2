@@ -25,20 +25,6 @@ export async function auditLog(action: string, resourceType: string, resourceId?
     }])
 }
 
-/**
- * Admin Access Guard
- */
-async function adminCheck() {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) throw new Error("Accès non autorisé")
-
-    const { data: isAdmin } = await supabase.rpc('is_admin')
-    if (!isAdmin) throw new Error("Accès admin requis")
-
-    return user
-}
-
 
 export async function getPendingVerifications() {
     return await fetchPendingVerifications()
@@ -229,7 +215,7 @@ export async function getAnalyticsStats() {
 export async function approveVerification(requestId: string, initialLevel: 'STANDARD' | 'PREMIUM' = 'STANDARD') {
     try {
         console.log('[approveVerification] Starting approval for requestId:', requestId)
-        const adminUser = await adminCheck()
+        const adminUser = await ensureAdmin()
         const supabase = await createClient()
         const adminClient = createAdminClient()
 
@@ -371,7 +357,7 @@ async function updateProfileAndRequest(adminClient: any, requestId: string, user
 }
 
 export async function rejectVerification(requestId: string, reason: string) {
-    await adminCheck()
+    await ensureAdmin()
     const supabase = await createClient()
 
     const { error } = await supabase
@@ -390,7 +376,7 @@ export async function rejectVerification(requestId: string, reason: string) {
 // --- USERS ---
 
 export async function updateUserProfile(userId: string, data: { level?: 'NONE' | 'STANDARD' | 'PREMIUM', status?: 'ACTIVE' | 'SUSPENDED' }) {
-    await adminCheck()
+    await ensureAdmin()
     const supabase = await createClient()
 
     const { error } = await supabase
@@ -409,7 +395,7 @@ export async function updateUserProfile(userId: string, data: { level?: 'NONE' |
 // --- PRODUCTS & INVENTORY ---
 
 export async function upsertProduct(product: any) {
-    await adminCheck()
+    await ensureAdmin()
     const supabase = await createClient()
 
     const { data, error } = await supabase
@@ -429,7 +415,7 @@ export async function upsertProduct(product: any) {
 }
 
 export async function upsertVariant(variant: any) {
-    await adminCheck()
+    await ensureAdmin()
     const supabase = await createClient()
 
     // Asegurar que stock_count nunca sea nulo
@@ -454,7 +440,7 @@ export async function upsertVariant(variant: any) {
 }
 
 export async function updateInventoryStock(variantId: string, newStock: number) {
-    await adminCheck()
+    await ensureAdmin()
     const supabase = await createClient()
 
     const sanitizedStock = Math.max(0, Math.floor(newStock || 0))
@@ -473,7 +459,7 @@ export async function updateInventoryStock(variantId: string, newStock: number) 
 }
 
 export async function deleteVariant(variantId: string) {
-    await adminCheck()
+    await ensureAdmin()
     const supabase = await createClient()
 
     const { error } = await supabase
@@ -493,7 +479,7 @@ export async function deleteVariant(variantId: string) {
 // --- DISCOUNTS ---
 
 export async function updateMonthlyDiscount(yearMonth: string, level: 'STANDARD' | 'PREMIUM', percent: number) {
-    await adminCheck()
+    await ensureAdmin()
     const supabase = await createClient()
 
     const { error } = await supabase
@@ -511,7 +497,7 @@ export async function updateMonthlyDiscount(yearMonth: string, level: 'STANDARD'
 // --- ORDERS ---
 
 export async function getOrderDetails(orderId: string) {
-    await adminCheck()
+    await ensureAdmin()
     const supabase = await createClient()
 
     const { data, error } = await supabase

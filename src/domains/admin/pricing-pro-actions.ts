@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { ensureAdmin } from '@/lib/auth/admin-guard'
 
 export type PricingScope = 'GLOBAL' | 'CATEGORY' | 'PRODUCT'
 
@@ -60,6 +61,7 @@ export async function upsertPricingRule(rule: PricingRule) {
  * Delete a rule
  */
 export async function deletePricingRule(id: string) {
+    await ensureAdmin()
     const supabase = await createClient()
     const { error } = await supabase.from('pricing_pro_rules').delete().eq('id', id)
     if (error) throw new Error(error.message)

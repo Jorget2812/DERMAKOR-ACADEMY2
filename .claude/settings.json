@@ -1,0 +1,20 @@
+{
+    "rules": {
+        "block_env_access": true,
+        "block_secrets": true,
+        "block_auto_git_push": true,
+        "allow_commands": [
+            "tsc",
+            "lint",
+            "test"
+        ]
+    },
+    "blocked_files": [
+        ".env",
+        ".env.local",
+        ".env.production"
+    ],
+    "security": {
+        "prevent_automatic_commits": true
+    }
+}

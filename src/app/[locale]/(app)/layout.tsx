@@ -2,6 +2,7 @@ import Sidebar from "@/components/domains/app-shell/sidebar"
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { GraduationCap } from 'lucide-react'
+import { MobileBottomNav } from "@/components/app/MobileBottomNav"
 
 export default async function AppLayout({
     children,
@@ -44,9 +45,11 @@ export default async function AppLayout({
                     </div>
                 </header>
 
-                <main className="p-6 md:p-10 lg:p-16 max-w-7xl mx-auto w-full transition-all duration-500">
+                <main className="p-6 pb-24 md:p-10 lg:p-16 max-w-7xl mx-auto w-full transition-all duration-500">
                     {children}
                 </main>
+
+                <MobileBottomNav />
             </div>
         </div>
     )

@@ -1,5 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { logger } from '@/lib/logger'
+
+const log = logger('admin-guard')
 
 /**
  * Server-side check to ensure the current user is an authorized Admin.
@@ -17,7 +20,7 @@ export async function ensureAdmin() {
 
 
     if (error || !isAdmin) {
-        console.error('Admin Access Denied:', error)
+        log.warn('Admin access denied', { userId: user?.id, error: error?.message })
         redirect('/app') // Redirect to user dashboard if not admin
     }
 

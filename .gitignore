@@ -47,3 +47,11 @@ next-env.d.ts
 # Scripts de diagnóstico (pueden contener queries sensibles)
 scripts/diagnostics/*.log
 scripts/diagnostics/*.output
+
+# Archivos de build, logs y backups (no deben estar en git)
+build_log*.txt
+typecheck_errors*.txt
+lint_output.txt
+import_debug.json
+*.bak
+*.utf8
