@@ -16,7 +16,7 @@ export function MobileBottomNav() {
     const items = [
         { href: `/${locale}/app`, label: 'Accueil', icon: LayoutDashboard, exact: true },
         { href: `/${locale}/app/shop`, label: 'Produits', icon: Package },
-        { href: `/${locale}/app/checkout`, label: 'Panier', icon: ShoppingCart, badge: cartCount },
+        { href: `/${locale}/app/cart`, label: 'Panier', icon: ShoppingCart, badge: cartCount },
         { href: `/${locale}/app/academy`, label: 'Academy', icon: GraduationCap },
         { href: `/${locale}/app/orders`, label: 'Commandes', icon: ShoppingBag },
     ]
