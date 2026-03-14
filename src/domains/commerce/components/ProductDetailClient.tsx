@@ -28,9 +28,10 @@ interface ProductDetailClientProps {
     initialPricing: VerifiedProduct | null
     isAdmin?: boolean
     badgeText?: string | null
+    relatedProducts?: PublicProduct[]
 }
 
-export function ProductDetailClient({ product, initialPricing, isAdmin, badgeText }: ProductDetailClientProps) {
+export function ProductDetailClient({ product, initialPricing, isAdmin, badgeText, relatedProducts = [] }: ProductDetailClientProps) {
     const [qty, setQty] = useState(1)
     const [activeImage, setActiveImage] = useState(0)
 
@@ -44,7 +45,7 @@ export function ProductDetailClient({ product, initialPricing, isAdmin, badgeTex
     }, [product.description]);
 
     return (
-        <div className="max-w-7xl mx-auto px-6 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
             {/* Nav Superior */}
             <motion.div
                 initial={{ opacity: 0, x: -20 }}
@@ -62,7 +63,7 @@ export function ProductDetailClient({ product, initialPricing, isAdmin, badgeTex
                 </Link>
             </motion.div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 lg:gap-32">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-32">
                 {/* Columna Izquierda: Galería Premium */}
                 <div className="space-y-10">
                     <motion.div
@@ -125,7 +126,7 @@ export function ProductDetailClient({ product, initialPricing, isAdmin, badgeTex
                 </div>
 
                 {/* Columna Derecha: Información y Compra */}
-                <div className="lg:sticky lg:top-12 h-fit space-y-16">
+                <div className="lg:sticky lg:top-12 h-fit space-y-8 sm:space-y-12 lg:space-y-16">
                     <div className="space-y-8">
                         <div className="space-y-4">
                             <div className="flex items-center justify-between mb-2">
@@ -139,7 +140,7 @@ export function ProductDetailClient({ product, initialPricing, isAdmin, badgeTex
                             <motion.h1
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                className="text-5xl md:text-7xl font-serif tracking-tight text-primary leading-[1.1]"
+                                className="text-3xl sm:text-5xl md:text-7xl font-serif tracking-tight text-primary leading-[1.1]"
                             >
                                 {product.name}
                             </motion.h1>
@@ -161,17 +162,17 @@ export function ProductDetailClient({ product, initialPricing, isAdmin, badgeTex
                             <motion.div
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
-                                className="flex items-center gap-10"
+                                className="flex items-center gap-4 sm:gap-10 flex-wrap"
                             >
                                 <div className="flex flex-col">
                                     <span className="text-[10px] font-bold text-[#C0A76A] uppercase tracking-[0.2em] mb-2 font-oswald">Votre Tarif Professionnel</span>
-                                    <span className="text-6xl font-bold tracking-tighter text-primary">
+                                    <span className="text-4xl sm:text-6xl font-bold tracking-tighter text-primary">
                                         {(initialPricing.gross_price_cents / 100).toFixed(2)}
                                         <span className="text-sm font-medium ml-2 text-primary/40 uppercase tracking-tighter italic">CHF</span>
                                     </span>
                                 </div>
                                 {initialPricing.compare_at_price_cents && initialPricing.compare_at_price_cents > 0 && (
-                                    <div className="flex flex-col border-l border-secondary pl-10">
+                                    <div className="flex flex-col border-l border-secondary pl-5 sm:pl-10">
                                         <span className="text-[10px] font-bold text-primary/30 uppercase tracking-widest mb-2">Prix Public de vente</span>
                                         <span className="text-3xl text-primary/20 line-through decoration-primary/10 tracking-tighter">
                                             {(initialPricing.compare_at_price_cents / 100).toFixed(2)}
@@ -192,16 +193,16 @@ export function ProductDetailClient({ product, initialPricing, isAdmin, badgeTex
                         )}
 
                         <div
-                            className="text-primary/60 text-xl leading-relaxed font-medium tracking-tight border-l-2 border-accent/20 pl-8 italic prose prose-slate"
+                            className="text-primary/60 text-base sm:text-xl leading-relaxed font-medium tracking-tight border-l-2 border-accent/20 pl-5 sm:pl-8 italic prose prose-slate"
                             dangerouslySetInnerHTML={{ __html: sanitizedDescription || "Une solution professionnelle dermatologique conçue pour des résultats exceptionnels et une précision clinique de haut niveau." }}
                         />
                     </div>
 
                     {/* Acciones de Compra */}
                     {hasPricing ? (
-                        <div className="space-y-10 pt-10 border-t border-secondary">
-                            <div className="flex flex-wrap items-end gap-10">
-                                <div className="space-y-4">
+                        <div className="space-y-6 sm:space-y-10 pt-8 sm:pt-10 border-t border-secondary">
+                            <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-end gap-5 sm:gap-10">
+                                <div className="space-y-3">
                                     <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-primary/40">Unités</span>
                                     <QuantitySelector
                                         value={qty}
@@ -220,6 +221,27 @@ export function ProductDetailClient({ product, initialPricing, isAdmin, badgeTex
                                         qty={qty}
                                         disabled={initialPricing.stock_count === 0}
                                     />
+                                </div>
+                            </div>
+
+                            {/* Payment trust badges */}
+                            <div className="flex items-center gap-2 flex-wrap">
+                                <span className="text-[8px] font-bold uppercase tracking-[0.2em] text-primary/25 mr-1">Paiement sécurisé</span>
+                                <div className="bg-white rounded px-2 py-1 shadow-sm border border-[#E8E4DC]">
+                                    <span className="text-[10px] font-black" style={{color:'#1A1F71', fontFamily:'Arial', letterSpacing:'1px'}}>VISA</span>
+                                </div>
+                                <div className="bg-white rounded px-2 py-1 shadow-sm border border-[#E8E4DC] flex items-center">
+                                    <div className="w-3.5 h-3.5 rounded-full" style={{background:'#EB001B'}} />
+                                    <div className="w-3.5 h-3.5 rounded-full -ml-1.5" style={{background:'#F79E1B', opacity:0.9}} />
+                                </div>
+                                <div className="bg-white rounded px-2 py-1 shadow-sm border border-[#E8E4DC]">
+                                    <span className="text-[10px] font-black" style={{color:'#003087'}}>Pay</span><span className="text-[10px] font-black" style={{color:'#009cde'}}>Pal</span>
+                                </div>
+                                <div className="rounded px-2 py-1 shadow-sm" style={{background:'#000'}}>
+                                    <span className="text-[9px] font-black text-white tracking-wider">TWINT</span>
+                                </div>
+                                <div className="rounded px-2 py-1 shadow-sm" style={{background:'#FFCC00'}}>
+                                    <span className="text-[9px] font-black text-black">PostFinance</span>
                                 </div>
                             </div>
 
@@ -305,7 +327,7 @@ export function ProductDetailClient({ product, initialPricing, isAdmin, badgeTex
                     </div>
 
                     {/* Señales de Confianza */}
-                    <div className="flex items-center gap-12 pt-12">
+                    <div className="flex items-center gap-6 sm:gap-12 pt-8 sm:pt-12 flex-wrap">
                         <div className="flex items-center gap-3">
                             <Truck size={18} className="text-accent" />
                             <span className="text-[9px] font-bold uppercase tracking-widest text-primary/40">Livraison Express CH</span>
@@ -317,6 +339,45 @@ export function ProductDetailClient({ product, initialPricing, isAdmin, badgeTex
                     </div>
                 </div>
             </div>
+
+            {/* Related Products */}
+            {relatedProducts.length > 0 && (
+                <div className="mt-16 sm:mt-24 pt-12 sm:pt-16 border-t border-secondary">
+                    <div className="mb-8">
+                        <p className="text-[9px] font-bold uppercase tracking-[0.35em] text-[#C0A76A] mb-2 font-oswald">Collection</p>
+                        <h2 className="text-2xl sm:text-3xl font-serif text-primary">Découvrez d'autres produits</h2>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
+                        {relatedProducts.map((rp) => (
+                            <Link
+                                key={rp.id}
+                                href={`/app/shop/${rp.slug}`}
+                                className="group block"
+                            >
+                                <div className="aspect-[4/5] relative bg-[#F5F5F0] rounded-2xl overflow-hidden mb-3">
+                                    {rp.images?.[0] ? (
+                                        <Image
+                                            src={rp.images[0]}
+                                            alt={rp.name}
+                                            fill
+                                            className="object-cover transition-transform duration-500 group-hover:scale-105"
+                                            sizes="(max-width: 640px) 50vw, 25vw"
+                                        />
+                                    ) : (
+                                        <div className="absolute inset-0 flex items-center justify-center text-primary/10">
+                                            <ShoppingBag size={40} strokeWidth={1} />
+                                        </div>
+                                    )}
+                                    <div className="absolute inset-0 bg-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                                </div>
+                                <p className="text-xs sm:text-sm font-serif text-primary group-hover:text-accent transition-colors line-clamp-2 leading-snug">
+                                    {rp.name}
+                                </p>
+                            </Link>
+                        ))}
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

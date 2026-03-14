@@ -94,6 +94,29 @@ export async function listProductsByCategorySlug(slug: string): Promise<PublicPr
 }
 
 /**
+ * Public: Related products by category_id, excluding current product
+ */
+export async function listPublicProductsByCategoryId(categoryId: string, excludeSlug?: string): Promise<PublicProduct[]> {
+    const supabase = await createClient()
+    const { data, error } = await supabase
+        .from('products')
+        .select('id, name, slug, description, images, category_id, is_bestseller, badge_text, badge_color')
+        .eq('active', true)
+        .eq('category_id', categoryId)
+        .limit(5)
+
+    if (error || !data) return []
+
+    return (data as any[])
+        .filter(p => p.slug !== excludeSlug)
+        .slice(0, 4)
+        .map(p => ({
+            ...p,
+            images: Array.isArray(p.images) ? p.images : []
+        })) as PublicProduct[]
+}
+
+/**
  * Verified: List products with tiered pricing and VAT
  */
 export async function listProductsForVerified(): Promise<VerifiedProduct[]> {

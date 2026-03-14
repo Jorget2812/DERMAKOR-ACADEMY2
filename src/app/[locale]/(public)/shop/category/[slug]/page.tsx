@@ -1,12 +1,13 @@
 import { listProductsByCategorySlug, listCategoriesPublic } from '@/domains/commerce/actions'
 import { Link } from '@/navigation'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Eye, ArrowLeft, Package, Star, Lock, ShoppingBag } from 'lucide-react'
+import { ArrowLeft, Lock, ShoppingBag } from 'lucide-react'
 import { notFound } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import Image from 'next/image'
 import { StarRating } from '@/components/ui/star-rating'
+import { CategoryFilterDropdown } from '@/components/shop/CategoryFilterDropdown'
 
 interface Props {
     params: { slug: string; locale: string }
@@ -40,7 +41,7 @@ export default async function CategoryShopPage({ params }: { params: Promise<{ s
             </section>
 
             {/* Sidebar + Products */}
-            <div className="container mx-auto px-6 py-16 flex flex-col lg:flex-row gap-16">
+            <div className="container mx-auto px-4 sm:px-6 py-8 md:py-16 flex flex-col lg:flex-row gap-16">
                 {/* Category sidebar */}
                 <aside className="hidden lg:block w-64 shrink-0 space-y-4">
                     <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary/30 mb-6">Collections</p>
@@ -70,6 +71,7 @@ export default async function CategoryShopPage({ params }: { params: Promise<{ s
 
                 {/* Products Grid */}
                 <div className="flex-grow">
+                    <CategoryFilterDropdown categories={categories} currentSlug={slug} />
                     {products.length === 0 ? (
                         <div className="text-center py-40 bg-white rounded-[40px] border border-secondary shadow-sm">
                             <ShoppingBag size={48} className="mx-auto text-primary/10 mb-6" strokeWidth={1} />
@@ -164,14 +166,6 @@ export default async function CategoryShopPage({ params }: { params: Promise<{ s
                                         </CardContent>
                                     </Link>
 
-                                    <CardFooter className="p-3 pt-0 sm:p-8 sm:pt-0">
-                                        <Link href={`/shop/${product.slug}`} className="w-full">
-                                            <Button className="w-full h-12 rounded-2xl bg-primary text-white hover:bg-accent transition-all font-bold text-[10px] uppercase tracking-widest shadow-lg shadow-primary/5 group" variant="default">
-                                                Détails du produit
-                                                <Eye size={14} className="ml-2 group-hover:translate-x-1 transition-transform" />
-                                            </Button>
-                                        </Link>
-                                    </CardFooter>
                                 </Card>
                             ))}
                         </div>

@@ -1,4 +1,4 @@
-import { getProductBySlug, getPricingBySlug } from "@/domains/commerce/actions"
+import { getProductBySlug, getPricingBySlug, listPublicProductsByCategoryId } from "@/domains/commerce/actions"
 import { ProductDetailClient } from "@/domains/commerce/components/ProductDetailClient"
 import { notFound } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
@@ -49,12 +49,18 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         badgeText = fallbackBadge?.badge_text || null
     }
 
+    // 4. Related products from same category
+    const relatedProducts = product.category_id
+        ? await listPublicProductsByCategoryId(product.category_id, slug)
+        : []
+
     return (
         <ProductDetailClient
             product={product}
             initialPricing={pricing}
             isAdmin={!!isAdmin}
             badgeText={badgeText}
+            relatedProducts={relatedProducts}
         />
     )
 }
