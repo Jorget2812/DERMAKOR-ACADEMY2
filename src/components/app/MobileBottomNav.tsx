@@ -39,7 +39,7 @@ export function MobileBottomNav() {
                             <div className="relative">
                                 <item.icon className="w-5 h-5" strokeWidth={isActive ? 2.5 : 1.5} />
                                 {item.badge !== undefined && item.badge > 0 && (
-                                    <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 flex items-center justify-center rounded-full bg-[#C0A76A] text-white text-[9px] font-bold px-0.5">
+                                    <span className="absolute -top-1.5 -right-1.5 min-w-[16px] max-w-[24px] h-4 flex items-center justify-center rounded-full bg-[#C0A76A] text-white text-[9px] font-bold px-0.5 overflow-hidden">
                                         {item.badge > 99 ? '99+' : item.badge}
                                     </span>
                                 )}

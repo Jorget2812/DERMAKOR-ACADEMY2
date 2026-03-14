@@ -28,8 +28,8 @@ export function CmsImage({ src, alt, className, fallbackText, ...props }: CmsIma
     if (isInvalid) {
         return (
             <div
-                className={`flex flex-col items-center justify-center bg-[#F5F0EB] border border-dashed border-[#E8E4DC] transition-all ${className}`}
-                style={{ minHeight: props.fill ? '100%' : '200px' }}
+                className={`flex flex-col items-center justify-center bg-[#F5F0EB] border border-dashed border-[#E8E4DC] transition-all ${props.fill ? '' : 'min-h-[120px] sm:min-h-[200px]'} ${className}`}
+                style={{ minHeight: props.fill ? '100%' : undefined }}
             >
                 <ImageIcon size={48} strokeWidth={1} className="text-[#E8E4DC] mb-2" />
                 {fallbackText && (

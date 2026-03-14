@@ -64,7 +64,7 @@ export default async function AcademyPage() {
                     <p className="text-[10px] font-black uppercase" style={{ letterSpacing: '0.3em', color: 'rgba(0,0,0,0.3)' }}>
                         Vos Formations ({accessible.length})
                     </p>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                         {accessible.map((course: any) => (
                             <Link key={course.id} href={`/app/academy/${course.slug}`}>
                                 <CourseCard course={course} userLevel={userLevel} />
@@ -81,7 +81,7 @@ export default async function AcademyPage() {
                         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
                         Formations Verrouillées ({locked.length})
                     </p>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                         {locked.map((course: any) => (
                             <CourseCard key={course.id} course={course} userLevel={userLevel} />
                         ))}

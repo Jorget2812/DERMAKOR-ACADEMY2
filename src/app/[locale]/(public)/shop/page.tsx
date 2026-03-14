@@ -14,7 +14,7 @@ export default async function PublicShopPage() {
                         Collections Exclusives
                     </span>
                     <h1 className="text-2xl md:text-4xl lg:text-6xl font-serif text-primary">Notre Boutique</h1>
-                    <p className="text-muted-foreground max-w-2xl mx-auto font-light leading-relaxed text-lg">
+                    <p className="text-muted-foreground max-w-2xl mx-auto font-light leading-relaxed text-sm sm:text-base lg:text-lg">
                         Sélectionnez une catégorie pour découvrir notre gamme exclusive de produits dermo-esthétiques haute performance.
                     </p>
                 </div>
@@ -36,7 +36,7 @@ export default async function PublicShopPage() {
                                 {categories.length} catégorie{categories.length > 1 ? 's' : ''} disponible{categories.length > 1 ? 's' : ''}
                             </h2>
                         </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
                             {categories.map((cat, i) => (
                                 <Link
                                     key={cat.id}

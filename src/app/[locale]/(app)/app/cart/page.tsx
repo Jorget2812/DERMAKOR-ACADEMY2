@@ -30,7 +30,7 @@ export default function CartPage() {
     if (items.length === 0) {
         return (
             <div className="min-h-screen bg-[#FAFAF8] flex items-center justify-center p-6">
-                <div className="bg-white rounded-lg border border-gray-100 p-12 text-center max-w-md w-full shadow-sm">
+                <div className="bg-white rounded-lg border border-gray-100 p-8 sm:p-12 text-center max-w-md w-full shadow-sm">
                     <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
                         <Package className="w-8 h-8 text-gray-300" strokeWidth={1.5} />
                     </div>
@@ -48,9 +48,9 @@ export default function CartPage() {
     }
 
     return (
-        <div className="min-h-screen bg-[#FAFAF8] pb-24 md:pb-10">
-            <div className="max-w-7xl mx-auto">
-                <h1 className="text-2xl font-bold uppercase tracking-wider mb-8 text-[#1a1a1a]">Mon Panier</h1>
+        <div className="min-h-screen bg-[#FAFAF8] pb-20 md:pb-10">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6">
+                <h1 className="text-xl sm:text-2xl font-bold uppercase tracking-wider mb-6 sm:mb-8 text-[#1a1a1a]">Mon Panier</h1>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     {/* Items List (Left Column / Top on Mobile) */}

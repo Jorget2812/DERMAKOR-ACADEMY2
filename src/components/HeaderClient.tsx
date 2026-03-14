@@ -195,13 +195,13 @@ export function HeaderClient({ items, settings, user }: HeaderClientProps) {
                                 initial={{ opacity: 0, y: -10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.15, duration: 0.4 }}
-                                className="px-8 pt-8 pb-6 border-b border-[#C0A76A]/10"
+                                className="px-5 sm:px-8 pt-8 pb-6 border-b border-[#C0A76A]/10"
                             >
                                 <p className="text-[9px] font-bold uppercase tracking-[0.35em] text-[#C0A76A]">Dermakor Swiss</p>
                                 <p className="text-[8px] uppercase tracking-[0.2em] text-[#8A8578] mt-0.5">Importateur Officiel KRX Aesthetics</p>
                             </motion.div>
 
-                            <div className="flex-grow overflow-y-auto px-8 py-8">
+                            <div className="flex-grow overflow-y-auto px-5 sm:px-8 py-8">
                                 <div className="space-y-1">
                                     {topItems.map((item, i) => {
                                         const subItems = items.filter(sub => sub.parent_id === item.id && sub.is_visible)
@@ -249,7 +249,7 @@ export function HeaderClient({ items, settings, user }: HeaderClientProps) {
                                 initial={{ opacity: 0, y: 16 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.45, duration: 0.4 }}
-                                className="p-7 border-t border-[#C0A76A]/10 space-y-4"
+                                className="p-5 sm:p-7 border-t border-[#C0A76A]/10 space-y-4"
                                 style={{ background: 'rgba(192,167,106,0.04)' }}
                             >
                                 {showLang && (

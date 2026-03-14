@@ -59,7 +59,7 @@ export default async function OrderDetailPage({ params }: OrderPageProps) {
     }
 
     return (
-        <div className="max-w-5xl mx-auto space-y-8 pb-12">
+        <div className="max-w-5xl mx-auto space-y-8 pb-12 px-4 sm:px-0">
             <div className="flex flex-wrap items-center justify-between gap-4">
                 <div className="space-y-1">
                     <Link href="/app/orders" className="text-sm text-muted-foreground hover:text-primary flex items-center gap-2 mb-2 transition-colors">
@@ -106,8 +106,14 @@ export default async function OrderDetailPage({ params }: OrderPageProps) {
                                         <tr className="border-b text-muted-foreground text-[11px] uppercase tracking-wider font-semibold">
                                             <th className="text-left py-3 font-medium">Produit</th>
                                             <th className="text-center py-3 font-medium">Qté</th>
-                                            <th className="text-right py-3 font-medium">Prix Unit. HT (CHF)</th>
-                                            <th className="text-right py-3 font-medium">Total HT (CHF)</th>
+                                            <th className="text-right py-3 font-medium">
+                                                <span className="hidden sm:inline">Prix Unit. HT (CHF)</span>
+                                                <span className="sm:hidden">P.U.</span>
+                                            </th>
+                                            <th className="text-right py-3 font-medium">
+                                                <span className="hidden sm:inline">Total HT (CHF)</span>
+                                                <span className="sm:hidden">Total</span>
+                                            </th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-border/30">

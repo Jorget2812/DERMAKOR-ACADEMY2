@@ -96,7 +96,7 @@ export default function AdminSidebar({
     }
 
     return (
-        <aside className="fixed left-0 top-0 bottom-0 w-64 border-r bg-white text-primary flex flex-col z-50 border-border/40">
+        <aside className="hidden md:flex fixed left-0 top-0 bottom-0 w-64 border-r bg-white text-primary flex-col z-50 border-border/40">
             <div className="p-8 h-20 flex items-center border-b border-border/40">
                 <Link href="/admin" className="flex items-center gap-3 group">
                     <div className="w-8 h-8 rounded-full gold-gradient flex items-center justify-center text-white shadow-lg shadow-accent/20 group-hover:scale-110 transition-transform duration-500">

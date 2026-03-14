@@ -318,7 +318,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
                                 { n: g(cms, 'fig4_number'), l: g(cms, 'fig4_label') },
                             ].map((fig, i) => (
                                 <div key={i} className="flex flex-col items-center justify-center text-center py-4 md:py-0 px-3 md:px-8 gap-2 md:gap-3">
-                                    <span className="font-oswald font-bold text-3xl md:text-5xl lg:text-6xl xl:text-7xl text-[#C0A76A] leading-none">
+                                    <span className="font-oswald font-bold text-2xl sm:text-3xl md:text-5xl lg:text-6xl xl:text-7xl text-[#C0A76A] leading-none">
                                         {fig.n}
                                     </span>
                                     <span className="font-oswald text-[10px] uppercase tracking-[3px] text-[#6B6560]">

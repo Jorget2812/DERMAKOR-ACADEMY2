@@ -147,7 +147,7 @@ export function CourseCard({ course, userLevel }: { course: any; userLevel: stri
                     fontSize: '12.5px', lineHeight: 1.6,
                     color: isLocked ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.45)',
                     marginBottom: 14,
-                    display: '-webkit-box', WebkitLineClamp: 2,
+                    display: '-webkit-box', WebkitLineClamp: 3,
                     WebkitBoxOrient: 'vertical', overflow: 'hidden',
                 }}>
                     {course.description}

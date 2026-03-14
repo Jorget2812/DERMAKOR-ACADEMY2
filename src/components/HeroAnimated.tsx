@@ -45,7 +45,7 @@ export function HeroAnimated({ overtitle, titleLine1, titleLine2, subtitle, ctaL
                     style={{ transitionDelay: '150ms', transitionTimingFunction: 'cubic-bezier(0.23, 1, 0.32, 1)' }}
                 >
                     <h1 className="font-oswald leading-[1.05]">
-                        <span className="block text-3xl md:text-5xl lg:text-7xl xl:text-[88px] font-light text-[#262626] tracking-tight">
+                        <span className="block text-2xl sm:text-3xl md:text-5xl lg:text-7xl xl:text-[88px] font-light text-[#262626] tracking-tight">
                             {titleLine1}
                         </span>
                     </h1>
@@ -56,7 +56,7 @@ export function HeroAnimated({ overtitle, titleLine1, titleLine2, subtitle, ctaL
                     className={`${base} ${mounted ? visible : hidden}`}
                     style={{ transitionDelay: '280ms', transitionTimingFunction: 'cubic-bezier(0.23, 1, 0.32, 1)', marginTop: 0 }}
                 >
-                    <span className="block font-oswald text-3xl md:text-5xl lg:text-7xl xl:text-[88px] font-bold italic text-[#C0A76A] tracking-tight leading-[1.05]">
+                    <span className="block font-oswald text-2xl sm:text-3xl md:text-5xl lg:text-7xl xl:text-[88px] font-bold italic text-[#C0A76A] tracking-tight leading-[1.05]">
                         {titleLine2}
                     </span>
                 </div>

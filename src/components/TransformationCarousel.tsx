@@ -62,7 +62,7 @@ export function TransformationCarousel({ slides, badgeText }: TransformationCaro
             <motion.div
                 key={`${index}-${offset}`}
                 className={`relative flex-shrink-0 transition-all duration-500 overflow-hidden rounded-xl bg-white shadow-xl
-                    ${isCenter ? 'z-20 w-[300px] md:w-[400px] h-[400px] md:h-[500px]' : 'z-10 w-[240px] md:w-[320px] h-[320px] md:h-[400px] opacity-70 scale-95'}`}
+                    ${isCenter ? 'z-20 w-[min(300px,calc(100vw-80px))] sm:w-[300px] md:w-[400px] h-[380px] sm:h-[400px] md:h-[500px]' : 'z-10 w-[240px] md:w-[320px] h-[320px] md:h-[400px] opacity-70 scale-95'}`}
                 initial={{ x: direction * 50, opacity: 0 }}
                 animate={{ x: 0, opacity: isCenter ? 1 : 0.7, scale: isCenter ? 1.05 : 0.95 }}
                 exit={{ x: -direction * 50, opacity: 0 }}

@@ -62,7 +62,7 @@ export function Footer() {
                 </div>
 
                 {/* Main Grid */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-8 gap-y-12">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-10 sm:gap-y-12">
 
                     <div>
                         <h4 className="font-oswald text-[9px] uppercase tracking-[4px] text-[#C0A76A] font-bold mb-6">
